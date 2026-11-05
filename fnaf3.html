@@ -1,0 +1,1777 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Five Nights at Ashi 3</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-drag: none; }
+  body {
+    background: #000;
+    color: #d8f8b8;
+    font-family: 'Courier New', Courier, monospace;
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  #game-wrap {
+    position: relative;
+    width: 1280px;
+    height: 720px;
+    max-width: 100vw;
+    max-height: 100vh;
+    aspect-ratio: 16 / 9;
+    background: #000;
+    overflow: hidden;
+    box-shadow: 0 0 65px rgba(20, 40, 10, 0.95);
+    border: 1px solid #223018;
+  }
+  .crt-overlay {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 90;
+    background:
+      repeating-linear-gradient(0deg, rgba(0,0,0,0.22) 0px, rgba(0,0,0,0.22) 1px, transparent 1px, transparent 3px),
+      radial-gradient(circle at center, transparent 55%, rgba(0,0,0,0.82) 100%);
+  }
+  #static-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 45;
+    opacity: 0;
+    mix-blend-mode: screen;
+  }
+  /* Blackout Vision Fade when Ventilation fails too long */
+  #vent-blackout {
+    position: absolute;
+    inset: 0;
+    background: #000;
+    pointer-events: none;
+    z-index: 48;
+    opacity: 0;
+    transition: opacity 0.35s;
+  }
+
+  /* TITLE SCREEN */
+  #title-screen {
+    position: absolute;
+    inset: 0;
+    z-index: 60;
+    background: radial-gradient(circle at 70% 50%, #16220c 0%, #050804 65%, #000 100%);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 40px 64px;
+  }
+  #title-bg-char {
+    position: absolute;
+    right: 30px;
+    bottom: -15px;
+    height: 735px;
+    opacity: 0.88;
+    filter: contrast(1.35) brightness(0.82);
+    pointer-events: none;
+  }
+  .title-header { position: relative; z-index: 5; }
+  .title-header h1 {
+    font-size: 50px;
+    line-height: 1.05;
+    letter-spacing: 3px;
+    color: #b8e878;
+    text-transform: uppercase;
+    text-shadow: 3px 3px 0 #000, 0 0 22px rgba(120, 210, 40, 0.55);
+  }
+  .stars-row {
+    margin-top: 10px;
+    font-size: 34px;
+    color: #d4ff44;
+    letter-spacing: 8px;
+  }
+  .menu-list {
+    position: relative;
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+  }
+  .menu-btn {
+    font-size: 27px;
+    color: #c8e8a0;
+    cursor: pointer;
+    letter-spacing: 2px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: fit-content;
+  }
+  .menu-btn:hover { color: #fff; transform: translateX(6px); text-shadow: 0 0 12px #8f4; }
+  .menu-btn .arrow { visibility: hidden; }
+  .menu-btn:hover .arrow { visibility: visible; }
+  .night-select-row { display: flex; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
+  .night-pill {
+    background: rgba(120, 200, 60, 0.12);
+    border: 1px solid #5a8038;
+    color: #c8e8a0;
+    padding: 5px 11px;
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .night-pill:hover { background: #9ce644; color: #000; }
+  .switch-links { display: flex; gap: 10px; margin-top: 8px; flex-wrap: wrap; }
+  .switch-game-btn {
+    display: inline-block;
+    padding: 7px 14px;
+    background: #101a08;
+    border: 2px solid #7acc33;
+    color: #b8ff77;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: bold;
+  }
+  .switch-game-btn:hover { background: #7acc33; color: #000; }
+  .title-footer {
+    position: relative;
+    z-index: 5;
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: #789860;
+  }
+
+  /* CUSTOM NIGHT MODAL */
+  #custom-night-modal {
+    position: absolute;
+    inset: 0;
+    z-index: 75;
+    background: rgba(4, 8, 2, 0.96);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px 24px;
+  }
+  .cn-grid {
+    display: flex;
+    gap: 12px;
+    margin: 14px 0 18px;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 1180px;
+  }
+  .cn-card {
+    width: 154px;
+    background: #0c1408;
+    border: 2px solid #486830;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .cn-card.spring {
+    border-color: #aadd33;
+    background: #16240a;
+  }
+  .cn-card img {
+    width: 112px;
+    height: 124px;
+    object-fit: cover;
+    object-position: top center;
+    border: 1px solid #354c22;
+    background: #050804;
+    margin-bottom: 6px;
+  }
+  .cn-name { font-size: 13px; font-weight: bold; color: #d8ff99; text-align: center; }
+  .cn-role { font-size: 10px; color: #8ab070; margin: 3px 0 6px; text-align: center; height: 24px; line-height: 1.15; }
+  .cn-controls { display: flex; align-items: center; gap: 8px; }
+  .cn-btn {
+    width: 26px; height: 26px; background: #1a2810; border: 1px solid #689040;
+    color: #fff; font-size: 16px; cursor: pointer; font-family: inherit;
+  }
+  .cn-btn:hover { background: #9ce644; color: #000; }
+  .cn-val { font-size: 20px; width: 32px; text-align: center; font-weight: bold; }
+  .cn-actions { display: flex; gap: 14px; }
+  .cn-action-btn {
+    padding: 8px 22px; font-size: 18px; font-family: inherit;
+    background: #121d0b; border: 2px solid #9ce644; color: #d8ff99; cursor: pointer;
+  }
+  .cn-action-btn:hover { background: #9ce644; color: #000; }
+
+  /* OVERLAYS */
+  .fullscreen-overlay {
+    position: absolute; inset: 0; z-index: 70; background: #000;
+    display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+  }
+  #newspaper-card {
+    width: 780px; background: #cfd4c4; color: #111; padding: 34px 44px;
+    border: 4px double #222; font-family: Georgia, serif; text-align: left; transform: rotate(-1deg);
+  }
+  #newspaper-card h2 {
+    font-size: 44px; border-bottom: 3px solid #111; padding-bottom: 6px; margin-bottom: 14px; text-align: center;
+  }
+  .np-body { display: flex; gap: 22px; align-items: center; }
+  .np-body img {
+    width: 190px; height: 220px; object-fit: cover; object-position: top;
+    filter: sepia(0.35) contrast(1.35); border: 2px solid #222;
+  }
+
+  /* THE FNAF 3 OFFICE (2000x720 pan inside 1280x720) */
+  #office-viewport { position: absolute; inset: 0; overflow: hidden; z-index: 10; }
+  #office-world { position: absolute; top: 0; left: 0; width: 2000px; height: 720px; will-change: transform; }
+  #office-bg { position: absolute; top: 0; left: 0; width: 2000px; height: 720px; object-fit: fill; pointer-events: none; }
+
+  /* MAINTENANCE PANEL OVERLAY (Left Side of Office - [A]) */
+  #maint-screen {
+    position: absolute;
+    left: 60px;
+    top: 68px;
+    width: 680px;
+    height: 540px;
+    background: #0c1209;
+    border: 8px solid #3a4432;
+    border-radius: 10px;
+    box-shadow: 0 0 50px rgba(0,0,0,0.95), inset 0 0 30px rgba(80,180,40,0.18);
+    z-index: 32;
+    display: none;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 32px 42px;
+    color: #ff9922;
+  }
+  .maint-title {
+    font-size: 30px;
+    letter-spacing: 3px;
+    border-bottom: 2px solid #ff9922;
+    padding-bottom: 10px;
+  }
+  .maint-list {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    margin: 18px 0;
+  }
+  .maint-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 26px;
+    padding: 10px 16px;
+    background: rgba(255, 150, 30, 0.08);
+    border: 2px solid transparent;
+    cursor: pointer;
+  }
+  .maint-row:hover {
+    border-color: #ff9922;
+    background: rgba(255, 150, 30, 0.18);
+  }
+  .sys-status.ok { color: #55ff55; }
+  .sys-status.err { color: #ff3322; animation: blink 0.35s infinite; font-weight: bold; }
+  .sys-status.wait { color: #ffdd44; }
+
+  /* CAMERA MONITOR OVERLAY (Right Side of Office - [SPACE]) */
+  #cam-screen {
+    position: absolute;
+    right: 36px;
+    top: 34px;
+    width: 1180px;
+    height: 625px;
+    background: #050a04;
+    border: 8px solid #2e3829;
+    border-radius: 8px;
+    z-index: 30;
+    display: none;
+    overflow: hidden;
+    box-shadow: 0 0 60px rgba(0,0,0,0.95);
+  }
+  #cam-feed-img {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 740px;
+    height: 610px;
+    object-fit: cover;
+    border-right: 3px solid #2e3829;
+  }
+  #cam-error-overlay {
+    position: absolute;
+    left: 0; top: 0; width: 740px; height: 610px;
+    background: #080c06;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #ff3322;
+    font-size: 38px;
+    font-weight: bold;
+    letter-spacing: 3px;
+    z-index: 34;
+  }
+  .cam-rec-dot {
+    position: absolute; top: 22px; left: 26px; display: flex; align-items: center;
+    gap: 10px; font-size: 22px; z-index: 36; text-shadow: 2px 2px 0 #000;
+  }
+  .red-circle {
+    width: 18px; height: 18px; border-radius: 50%; background: #e00;
+    box-shadow: 0 0 10px #f00; animation: blink 1s infinite;
+  }
+  @keyframes blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+  #cam-room-title {
+    position: absolute; top: 22px; left: 210px; font-size: 24px;
+    color: #d8ff99; letter-spacing: 2px; z-index: 36; text-shadow: 2px 2px 0 #000;
+  }
+
+  /* PLAY AUDIO & SEAL VENT CONTROLS INSIDE MONITOR */
+  #cam-controls-bar {
+    position: absolute;
+    bottom: 22px;
+    left: 24px;
+    z-index: 37;
+    display: flex;
+    gap: 14px;
+    align-items: center;
+  }
+  .fnaf3-cam-action {
+    padding: 12px 20px;
+    background: #1b2d12;
+    border: 3px solid #88d840;
+    color: #d8ff99;
+    font-family: inherit;
+    font-size: 17px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 0 16px rgba(0,0,0,0.85);
+  }
+  .fnaf3-cam-action:hover { background: #88d840; color: #000; }
+  .fnaf3-cam-action:disabled {
+    opacity: 0.45; cursor: not-allowed; border-color: #666; color: #888; background: #181818;
+  }
+
+  /* RIGHT PANE OF MONITOR: FAZBEAR'S FRIGHT MAP (CAM 01-10 + VENT CAM 11-15) */
+  #cam-map-pane {
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 432px;
+    height: 610px;
+    background: #0a1207;
+    padding: 16px;
+    z-index: 36;
+  }
+  #map-mode-title {
+    font-size: 18px;
+    color: #9ce644;
+    text-align: center;
+    margin-bottom: 8px;
+    letter-spacing: 2px;
+  }
+  #map-box {
+    position: relative;
+    width: 400px;
+    height: 465px;
+    border: 1px solid #3c5828;
+    background: rgba(15, 30, 10, 0.55);
+  }
+  .cam-btn {
+    position: absolute;
+    width: 62px;
+    height: 36px;
+    background: #1e2b18;
+    border: 2px solid #8ab070;
+    color: #e2ffc8;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: bold;
+    line-height: 1.05;
+    cursor: pointer;
+    padding: 3px 5px;
+    text-align: left;
+  }
+  .cam-btn.vent-cam {
+    border-color: #ffaa33;
+    color: #ffdd99;
+    background: #2b2010;
+  }
+  .cam-btn.active {
+    background: #66cc22;
+    color: #000;
+    border-color: #fff;
+  }
+  .cam-btn.sealed {
+    border-color: #ff3322;
+    box-shadow: 0 0 10px #ff3322;
+  }
+  .radar-tags {
+    position: absolute; top: -13px; right: 0; display: flex; gap: 2px; pointer-events: none;
+  }
+  .r-dot {
+    font-size: 10px; padding: 0 3px; border-radius: 2px; font-weight: bold; color: #000;
+  }
+  #toggle-map-btn {
+    width: 100%;
+    margin-top: 12px;
+    padding: 12px;
+    background: #1b2814;
+    border: 2px solid #9ce644;
+    color: #d8ff99;
+    font-family: inherit;
+    font-size: 17px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  #toggle-map-btn:hover { background: #9ce644; color: #000; }
+
+  /* HUD LAYER */
+  #hud-layer {
+    position: absolute; inset: 0; pointer-events: none; z-index: 40; display: none;
+  }
+  .hud-top-left {
+    position: absolute; top: 20px; left: 28px; text-shadow: 2px 2px 0 #000;
+    background: rgba(0,0,0,0.65); padding: 8px 14px; border: 1px solid #354c22;
+  }
+  .err-badge {
+    font-size: 16px; font-weight: bold; color: #ff3322; display: none; animation: blink 0.35s infinite;
+  }
+  .hud-top-right {
+    position: absolute; top: 20px; right: 34px; text-align: right; text-shadow: 2px 2px 0 #000;
+  }
+  #hud-time { font-size: 42px; font-weight: bold; color: #d8ff99; }
+  #hud-night { font-size: 22px; color: #9ce644; }
+
+  /* Left & Right Action Bars (Maintenance Panel [A] & Camera Monitor [SPACE]) */
+  #maint-toggle-bar {
+    position: absolute;
+    bottom: 12px;
+    left: 42px;
+    width: 540px;
+    height: 42px;
+    background: rgba(220, 120, 20, 0.32);
+    border: 2px solid #ff9922;
+    color: #ffe0b2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    letter-spacing: 3px;
+    cursor: pointer;
+    pointer-events: auto;
+  }
+  #maint-toggle-bar:hover { background: rgba(255, 140, 30, 0.65); color: #000; font-weight: bold; }
+
+  #monitor-toggle-bar {
+    position: absolute;
+    bottom: 12px;
+    right: 42px;
+    width: 540px;
+    height: 42px;
+    background: rgba(110, 200, 50, 0.28);
+    border: 2px solid #9ce644;
+    color: #e2ffc8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    letter-spacing: 3px;
+    cursor: pointer;
+    pointer-events: auto;
+  }
+  #monitor-toggle-bar:hover { background: rgba(156, 230, 68, 0.65); color: #000; font-weight: bold; }
+
+  #dev-toolbar {
+    position: absolute; top: 20px; left: 320px; display: flex; gap: 8px; pointer-events: auto;
+  }
+  .tool-pill {
+    background: rgba(0,0,0,0.78); border: 1px solid #5a8038; color: #b8e878;
+    font-family: inherit; font-size: 12px; padding: 5px 10px; cursor: pointer;
+  }
+  .tool-pill:hover, .tool-pill.active { background: #9ce644; color: #000; }
+  #ai-debug-box {
+    position: absolute; top: 54px; left: 320px; background: rgba(0,0,0,0.88);
+    border: 1px solid #5a8038; padding: 8px 12px; font-size: 12px; line-height: 1.45;
+    color: #9ce644; display: none; pointer-events: none;
+  }
+
+  /* JUMPSCARE LAYER (Lethal Springtrap OR Non-lethal Phantom Jumpscare!) */
+  #jumpscare-layer {
+    position: absolute; inset: 0; z-index: 80; background: rgba(10, 20, 5, 0.85);
+    display: none; align-items: center; justify-content: center; overflow: hidden;
+  }
+  #jumpscare-bg {
+    position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.55;
+  }
+  #jumpscare-char {
+    position: relative; height: 820px; z-index: 2;
+    filter: contrast(1.45) brightness(0.95);
+    animation: scareShake 0.045s infinite alternate;
+  }
+  @keyframes scareShake {
+    0% { transform: scale(1.18) translate(-18px, 12px) rotate(-4deg); }
+    50% { transform: scale(1.45) translate(22px, -16px) rotate(4deg); }
+    100% { transform: scale(1.58) translate(-12px, -22px) rotate(-3deg); }
+  }
+</style>
+</head>
+<body>
+
+<div id="game-wrap">
+  <div class="crt-overlay"></div>
+  <canvas id="static-canvas" width="640" height="360"></canvas>
+  <div id="vent-blackout"></div>
+
+  <!-- TITLE SCREEN -->
+  <div id="title-screen">
+    <img id="title-bg-char" src="assets3/sprites/springtrap.png" alt="Springtrap Ashi">
+    <div class="title-header">
+      <h1>Five<br>Nights<br>at<br>Ashi 3</h1>
+      <div class="stars-row" id="title-stars"></div>
+    </div>
+
+    <div class="menu-list">
+      <div class="menu-btn" onclick="startNewGame()">
+        <span class="arrow">&gt;&gt;</span> New Game
+      </div>
+      <div class="menu-btn" onclick="continueGame()">
+        <span class="arrow">&gt;&gt;</span> Continue <span id="continue-night-label" style="font-size:18px;color:#8ab070;margin-left:8px;">(Night 1)</span>
+      </div>
+      <div class="menu-btn" onclick="startSelectedNight(6)">
+        <span class="arrow">&gt;&gt;</span> Nightmare (Night 6)
+      </div>
+      <div class="menu-btn" onclick="openCustomNight()">
+        <span class="arrow">&gt;&gt;</span> Custom Night
+      </div>
+
+      <div style="margin-top:6px;font-size:12px;color:#8ab070;">QUICK SELECT NIGHT (AUDIO LURE + VENT SEAL + SYSTEM REBOOT + 6 PHANTOMS):</div>
+      <div class="night-select-row">
+        <button class="night-pill" onclick="startSelectedNight(1)">Night 1</button>
+        <button class="night-pill" onclick="startSelectedNight(2)">Night 2</button>
+        <button class="night-pill" onclick="startSelectedNight(3)">Night 3</button>
+        <button class="night-pill" onclick="startSelectedNight(4)">Night 4</button>
+        <button class="night-pill" onclick="startSelectedNight(5)">Night 5</button>
+        <button class="night-pill" onclick="startSelectedNight(6)">Night 6 (Nightmare)</button>
+        <button class="night-pill" onclick="openCustomNight()">Night 7 (Custom)</button>
+      </div>
+
+      <div class="switch-links">
+        <a href="https://github.com/AkashiZai/fivenightatashi" target="_blank" class="switch-game-btn">&#x25C0; Play Five Nights at Ashi 1</a>
+        <a href="https://github.com/AkashiZai/fivenightatashi2" target="_blank" class="switch-game-btn">&#x25C0; Play Five Nights at Ashi 2</a>
+      </div>
+    </div>
+
+    <div class="title-footer">
+      <span>Maintenance Panel: [A] | Camera Monitor: [Space]/[S] | Play Audio: [W] | Seal Vent: [E] | Toggle Vent Map: [Q]</span>
+      <span>© Five Nights at Ashi 3 — 30 Years Later at Fazbear's Fright</span>
+    </div>
+  </div>
+
+  <!-- CUSTOM NIGHT MODAL -->
+  <div id="custom-night-modal">
+    <h2 style="font-size:28px;letter-spacing:3px;color:#b8e878;">CUSTOM NIGHT — SPRINGTRAP ASHI + 6 PHANTOMS</h2>
+    <div class="cn-grid">
+      <div class="cn-card spring">
+        <img src="assets3/sprites/springtrap.png" alt="Springtrap Ashi">
+        <div class="cn-name">SPRINGTRAP ASHI</div>
+        <div class="cn-role">Lethal! Lure with Audio [W] &amp; Seal Vents [E]</div>
+        <div class="cn-controls">
+          <button class="cn-btn" onclick="adjCustomAI('springtrap', -1)">&lt;</button>
+          <div class="cn-val" id="cn-springtrap">20</div>
+          <button class="cn-btn" onclick="adjCustomAI('springtrap', 1)">&gt;</button>
+        </div>
+      </div>
+      <div class="cn-card">
+        <img src="assets3/sprites/phantom_bb.png" alt="Phantom BB">
+        <div class="cn-name">PHANTOM BB</div>
+        <div class="cn-role">Camera Jumpscare → Kills Ventilation</div>
+        <div class="cn-controls">
+          <button class="cn-btn" onclick="adjCustomAI('p_bb', -1)">&lt;</button>
+          <div class="cn-val" id="cn-p_bb">20</div>
+          <button class="cn-btn" onclick="adjCustomAI('p_bb', 1)">&gt;</button>
+        </div>
+      </div>
+      <div class="cn-card">
+        <img src="assets3/sprites/phantom_freddy.png" alt="Phantom Freddy">
+        <div class="cn-name">PHANTOM ASHI</div>
+        <div class="cn-role">Walks Window → Look at Cam/Panel!</div>
+        <div class="cn-controls">
+          <button class="cn-btn" onclick="adjCustomAI('p_freddy', -1)">&lt;</button>
+          <div class="cn-val" id="cn-p_freddy">20</div>
+          <button class="cn-btn" onclick="adjCustomAI('p_freddy', 1)">&gt;</button>
+        </div>
+      </div>
+      <div class="cn-card">
+        <img src="assets3/sprites/phantom_chica.png" alt="Phantom Chica">
+        <div class="cn-name">PHANTOM PIZZA</div>
+        <div class="cn-role">CAM 07 Arcade Screen → Switch Cam!</div>
+        <div class="cn-controls">
+          <button class="cn-btn" onclick="adjCustomAI('p_chica', -1)">&lt;</button>
+          <div class="cn-val" id="cn-p_chica">20</div>
+          <button class="cn-btn" onclick="adjCustomAI('p_chica', 1)">&gt;</button>
+        </div>
+      </div>
+      <div class="cn-card">
+        <img src="assets3/sprites/phantom_foxy.png" alt="Phantom Foxy">
+        <div class="cn-name">PHANTOM BIKINI</div>
+        <div class="cn-role">Left Office Box → Open Monitor to Clear!</div>
+        <div class="cn-controls">
+          <button class="cn-btn" onclick="adjCustomAI('p_foxy', -1)">&lt;</button>
+          <div class="cn-val" id="cn-p_foxy">20</div>
+          <button class="cn-btn" onclick="adjCustomAI('p_foxy', 1)">&gt;</button>
+        </div>
+      </div>
+      <div class="cn-card">
+        <img src="assets3/sprites/phantom_mangle.png" alt="Phantom Mangle">
+        <div class="cn-name">PHANTOM DRESS</div>
+        <div class="cn-role">CAM 04 → Breaks Audio Devices!</div>
+        <div class="cn-controls">
+          <button class="cn-btn" onclick="adjCustomAI('p_mangle', -1)">&lt;</button>
+          <div class="cn-val" id="cn-p_mangle">20</div>
+          <button class="cn-btn" onclick="adjCustomAI('p_mangle', 1)">&gt;</button>
+        </div>
+      </div>
+      <div class="cn-card">
+        <img src="assets3/sprites/phantom_puppet.png" alt="Phantom Puppet">
+        <div class="cn-name">PHANTOM MONCH</div>
+        <div class="cn-role">CAM 08 → Blocks Vision &amp; Panels!</div>
+        <div class="cn-controls">
+          <button class="cn-btn" onclick="adjCustomAI('p_puppet', -1)">&lt;</button>
+          <div class="cn-val" id="cn-p_puppet">20</div>
+          <button class="cn-btn" onclick="adjCustomAI('p_puppet', 1)">&gt;</button>
+        </div>
+      </div>
+    </div>
+    <div class="cn-actions">
+      <button class="cn-action-btn" onclick="closeCustomNight()">BACK</button>
+      <button class="cn-action-btn" onclick="setAllCustomAI(0)">ALL 0</button>
+      <button class="cn-action-btn" onclick="setAllCustomAI(10)">ALL 10</button>
+      <button class="cn-action-btn" onclick="setAllCustomAI(20)">AGGRESSIVE 20/20</button>
+      <button class="cn-action-btn" onclick="launchCustomNight()">READY &gt;&gt;</button>
+    </div>
+  </div>
+
+  <!-- NEWSPAPER OVERLAY -->
+  <div id="newspaper-screen" class="fullscreen-overlay" onclick="skipNewspaper()">
+    <div id="newspaper-card">
+      <h2>THE HORROR ATTRACTION!</h2>
+      <div class="np-body">
+        <img src="assets3/sprites/springtrap_full.jpg" alt="Fazbear's Fright">
+        <div class="np-text">
+          <h3>FAZBEAR'S FRIGHT: 30 YEARS LATER!</h3>
+          <p>Local amusement park is getting ready to scare your socks off with a new attraction based on the unsolved mysteries of Ashi's Pizza.</p>
+          <p><b>Night guard needed (12 AM – 6 AM):</b> Watch the 10 building cameras and 5 air vents, lure the real animatronic away with <b>Audio Devices [W]</b>, double-click/seal vents <b>[E]</b>, and reboot your systems on the left <b>Maintenance Panel [A]</b>!</p>
+        </div>
+      </div>
+      <div style="text-align:right;font-size:13px;margin-top:10px;color:#444;">(Click anywhere to continue)</div>
+    </div>
+  </div>
+
+  <!-- NIGHT INTRO -->
+  <div id="night-intro-screen" class="fullscreen-overlay">
+    <div style="font-size:48px;letter-spacing:3px;margin-bottom:12px;color:#b8e878;">12:00 AM</div>
+    <div id="night-intro-text" style="font-size:42px;letter-spacing:2px;color:#d8ff99;">Night 1</div>
+  </div>
+
+  <!-- 6 AM VICTORY -->
+  <div id="victory-screen" class="fullscreen-overlay">
+    <div id="victory-clock" style="font-size:92px;font-weight:bold;letter-spacing:6px;color:#b8e878;">5:00 AM</div>
+    <div id="victory-sub" style="font-size:24px;color:#9ce644;margin-top:20px;opacity:0;transition:opacity 1s;"></div>
+  </div>
+
+  <!-- GAME OVER -->
+  <div id="gameover-screen" class="fullscreen-overlay" onclick="returnToMenu()">
+    <img id="gameover-img" src="assets3/sprites/springtrap_full.jpg" style="height:430px;filter:contrast(1.4) brightness(0.75);margin-bottom:16px;border:2px solid #5a8038;" alt="Game Over">
+    <div style="font-size:54px;color:#d00;letter-spacing:6px;text-shadow:0 0 20px #f00;">GAME OVER</div>
+    <div id="gameover-reason" style="font-size:20px;color:#c8e8a0;margin-top:10px;"></div>
+    <div style="font-size:15px;color:#789860;margin-top:22px;">Click anywhere to return to Title Screen</div>
+  </div>
+
+  <!-- THE OFFICE VIEWPORT -->
+  <div id="office-viewport">
+    <div id="office-world">
+      <img id="office-bg" src="assets3/cams/office_normal.jpg" alt="FNaF 3 Office">
+    </div>
+  </div>
+
+  <!-- LEFT MAINTENANCE PANEL (REBOOT SYSTEMS) -->
+  <div id="maint-screen">
+    <div class="maint-title">SYSTEM RESTART<br><span style="font-size:16px;color:#aaa;">Menu &gt;&gt; Repair / Reboot</span></div>
+    <div class="maint-list">
+      <div class="maint-row" onclick="triggerReboot('audio')">
+        <span>&gt; audio devices</span>
+        <span class="sys-status ok" id="st-audio">OK</span>
+      </div>
+      <div class="maint-row" onclick="triggerReboot('camera')">
+        <span>&gt; camera system</span>
+        <span class="sys-status ok" id="st-camera">OK</span>
+      </div>
+      <div class="maint-row" onclick="triggerReboot('vent')">
+        <span>&gt; ventilation</span>
+        <span class="sys-status ok" id="st-vent">OK</span>
+      </div>
+      <div class="maint-row" style="margin-top:10px;border-top:1px dashed #665;padding-top:16px;" onclick="triggerReboot('all')">
+        <span>&gt; reboot all</span>
+        <span class="sys-status" id="st-all"></span>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <span id="reboot-progress-txt" style="font-size:18px;color:#ffdd44;">Select a system to reboot</span>
+      <button class="fnaf3-cam-action" onclick="toggleMaintPanel()">EXIT PANEL [A]</button>
+    </div>
+  </div>
+
+  <!-- RIGHT SECURITY CAMERA MONITOR -->
+  <div id="cam-screen">
+    <img id="cam-feed-img" src="assets3/cams/cam01_empty.jpg" alt="Camera">
+    <div id="cam-error-overlay">
+      <div>VIDEO ERROR</div>
+      <div style="font-size:18px;margin-top:12px;color:#ffaa44;">REBOOT CAMERA SYSTEM ON LEFT PANEL [A]</div>
+    </div>
+
+    <div class="cam-rec-dot">
+      <div class="red-circle"></div>
+      <span>LIVE</span>
+    </div>
+    <div id="cam-room-title">CAM 01 - Office Exit</div>
+
+    <div id="cam-controls-bar">
+      <button id="btn-play-audio" class="fnaf3-cam-action" onclick="playAudioLure()">
+        &#x1F50A; PLAY AUDIO [W] <span id="audio-uses-lbl" style="font-size:13px;"></span>
+      </button>
+      <button id="btn-seal-vent" class="fnaf3-cam-action" style="border-color:#ffaa33;color:#ffdd99;" onclick="sealCurrentVent()">
+        &#x1F6AA; SEAL VENT [E] (DBL-CLICK VENT CAM)
+      </button>
+    </div>
+
+    <!-- RIGHT MAP PANE -->
+    <div id="cam-map-pane">
+      <div id="map-mode-title">BUILDING CAMERAS (CAM 01 - 10)</div>
+      <div id="map-box">
+        <svg width="400" height="465" viewBox="0 0 400 465" fill="none" stroke="#6a9848" stroke-width="1.8" style="opacity:0.75;">
+          <!-- Upper Floor Corridors (CAM 08, 09, 10, 07, 06, 05) -->
+          <rect x="35" y="95" width="90" height="55"/>
+          <rect x="135" y="45" width="115" height="65"/>
+          <rect x="260" y="75" width="105" height="65"/>
+          <rect x="45" y="175" width="95" height="75"/>
+          <rect x="150" y="185" width="95" height="65"/>
+          <rect x="255" y="185" width="105" height="65"/>
+          <!-- Lower Floor Corridors (CAM 04, 03, 02, 01) & Office -->
+          <rect x="260" y="265" width="95" height="75"/>
+          <rect x="255" y="350" width="95" height="60"/>
+          <rect x="145" y="295" width="100" height="80"/>
+          <rect x="40" y="315" width="95" height="65"/>
+          <!-- Office Box -->
+          <rect x="75" y="392" width="125" height="55" stroke="#d8ff99" stroke-width="2.5"/>
+          <text x="112" y="425" fill="#d8ff99" stroke="none" font-size="14" font-family="monospace">OFFICE</text>
+          <!-- Vent Lines (Dashed Orange) -->
+          <g stroke="#ff9922" stroke-dasharray="4 3" stroke-width="1.5">
+            <line x1="250" y1="75" x2="215" y2="410"/>
+            <line x1="90" y1="250" x2="85" y2="392"/>
+            <line x1="255" y1="220" x2="195" y2="295"/>
+            <line x1="340" y1="140" x2="200" y2="425"/>
+            <line x1="65" y1="150" x2="65" y2="315"/>
+          </g>
+        </svg>
+
+        <!-- Building Camera Buttons (CAM 01 - 10) -->
+        <div id="building-cam-btns">
+          <button class="cam-btn active" id="btn-01" style="left:55px;top:330px;"  onclick="selectCamera('01')">CAM<br>01<div class="radar-tags" id="rad-01"></div></button>
+          <button class="cam-btn" id="btn-02" style="left:165px;top:318px;" onclick="selectCamera('02')">CAM<br>02<div class="radar-tags" id="rad-02"></div></button>
+          <button class="cam-btn" id="btn-03" style="left:272px;top:362px;" onclick="selectCamera('03')">CAM<br>03<div class="radar-tags" id="rad-03"></div></button>
+          <button class="cam-btn" id="btn-04" style="left:275px;top:285px;" onclick="selectCamera('04')">CAM<br>04<div class="radar-tags" id="rad-04"></div></button>
+          <button class="cam-btn" id="btn-05" style="left:275px;top:200px;" onclick="selectCamera('05')">CAM<br>05<div class="radar-tags" id="rad-05"></div></button>
+          <button class="cam-btn" id="btn-06" style="left:165px;top:200px;" onclick="selectCamera('06')">CAM<br>06<div class="radar-tags" id="rad-06"></div></button>
+          <button class="cam-btn" id="btn-07" style="left:60px;top:195px;"  onclick="selectCamera('07')">CAM<br>07<div class="radar-tags" id="rad-07"></div></button>
+          <button class="cam-btn" id="btn-08" style="left:50px;top:105px;"  onclick="selectCamera('08')">CAM<br>08<div class="radar-tags" id="rad-08"></div></button>
+          <button class="cam-btn" id="btn-09" style="left:162px;top:60px;"  onclick="selectCamera('09')">CAM<br>09<div class="radar-tags" id="rad-09"></div></button>
+          <button class="cam-btn" id="btn-10" style="left:280px;top:90px;"  onclick="selectCamera('10')">CAM<br>10<div class="radar-tags" id="rad-10"></div></button>
+        </div>
+
+        <!-- Vent Camera Buttons (CAM 11 - 15) -->
+        <div id="vent-cam-btns" style="display:none;">
+          <button class="cam-btn vent-cam" id="btn-11" style="left:212px;top:125px;" onclick="selectCamera('11')" ondblclick="sealCurrentVent()">CAM<br>11<div class="radar-tags" id="rad-11"></div></button>
+          <button class="cam-btn vent-cam" id="btn-12" style="left:58px;top:268px;"  onclick="selectCamera('12')" ondblclick="sealCurrentVent()">CAM<br>12<div class="radar-tags" id="rad-12"></div></button>
+          <button class="cam-btn vent-cam" id="btn-13" style="left:208px;top:248px;" onclick="selectCamera('13')" ondblclick="sealCurrentVent()">CAM<br>13<div class="radar-tags" id="rad-13"></div></button>
+          <button class="cam-btn vent-cam" id="btn-14" style="left:315px;top:195px;" onclick="selectCamera('14')" ondblclick="sealCurrentVent()">CAM<br>14<div class="radar-tags" id="rad-14"></div></button>
+          <button class="cam-btn vent-cam" id="btn-15" style="left:32px;top:162px;"  onclick="selectCamera('15')" ondblclick="sealCurrentVent()">CAM<br>15<div class="radar-tags" id="rad-15"></div></button>
+        </div>
+      </div>
+
+      <button id="toggle-map-btn" onclick="toggleVentMapMode()">
+        &#x1F504; MAP TOGGLE: SWITCH TO VENT CAMS [Q]
+      </button>
+    </div>
+  </div>
+
+  <!-- HUD LAYER -->
+  <div id="hud-layer">
+    <div class="hud-top-left">
+      <div style="font-size:15px;color:#9ce644;margin-bottom:4px;">FAZBEAR'S FRIGHT STATUS</div>
+      <div id="hud-err-audio" class="err-badge">&#x26A0; AUDIO ERROR</div>
+      <div id="hud-err-cam"   class="err-badge">&#x26A0; CAMERA ERROR</div>
+      <div id="hud-err-vent"  class="err-badge">&#x26A0; VENTILATION ERROR</div>
+      <div id="hud-all-ok" style="font-size:15px;color:#55ff55;">ALL SYSTEMS ONLINE</div>
+      <div id="office-alert" style="font-size:14px;color:#ffdd44;margin-top:4px;"></div>
+    </div>
+
+    <div id="dev-toolbar">
+      <button class="tool-pill" id="btn-speed" onclick="toggleSpeedMode()">Speed: 1x (60s/hr)</button>
+      <button class="tool-pill" id="btn-radar" onclick="toggleRadar()">AI Radar: OFF</button>
+      <a href="https://github.com/AkashiZai/fivenightatashi" target="_blank" class="tool-pill" style="text-decoration:none;">FNaA 1</a>
+      <a href="https://github.com/AkashiZai/fivenightatashi2" target="_blank" class="tool-pill" style="text-decoration:none;">FNaA 2</a>
+    </div>
+    <div id="ai-debug-box"></div>
+
+    <div class="hud-top-right">
+      <div id="hud-time">12 AM</div>
+      <div id="hud-night">Night 1</div>
+    </div>
+
+    <div id="maint-toggle-bar" onclick="toggleMaintPanel()">
+      &#x25C0; MAINTENANCE PANEL (REBOOT) [A]
+    </div>
+    <div id="monitor-toggle-bar" onclick="toggleMonitor()">
+      CAMERA MONITOR (AUDIO / VENTS) [SPACE] &#x25B6;
+    </div>
+  </div>
+
+  <!-- JUMPSCARE LAYER -->
+  <div id="jumpscare-layer">
+    <img id="jumpscare-bg" src="assets3/cams/office_normal.jpg" alt="BG">
+    <img id="jumpscare-char" src="assets3/sprites/springtrap.png" alt="Jumpscare">
+  </div>
+</div>
+
+<script>
+// ============================================================================
+// FIVE NIGHTS AT ASHI 3 — AUTHENTIC FNAF 3 ENGINE
+// (SPRINGTRAP + AUDIO LURE + VENT SEALING + SYSTEM ERRORS + 6 PHANTOMS)
+// ============================================================================
+
+const CAM_NAMES = {
+  '01': 'CAM 01 - Office West Exit',
+  '02': 'CAM 02 - Main Hallway',
+  '03': 'CAM 03 - Office East Hall',
+  '04': 'CAM 04 - Foxy Lamp Corridor',
+  '05': 'CAM 05 - Chica Prop Hall',
+  '06': 'CAM 06 - Corner Corridor',
+  '07': 'CAM 07 - Arcade Cabinet Room',
+  '08': 'CAM 08 - Freddy Prop Hall',
+  '09': 'CAM 09 - Storage Room',
+  '10': 'CAM 10 - Back Corner',
+  '11': 'CAM 11 - Vent (CAM 09 → Office)',
+  '12': 'CAM 12 - Vent (CAM 07 → Office)',
+  '13': 'CAM 13 - Vent (CAM 05 → CAM 02)',
+  '14': 'CAM 14 - Vent (CAM 10 → Office)',
+  '15': 'CAM 15 - Vent (CAM 08 → CAM 01)'
+};
+
+// Authentic FNaF 3 Room Adjacency Graph & Vent Connections
+const ROOM_GRAPH = {
+  '10': { rooms: ['09'],         vent: '14' },
+  '09': { rooms: ['10', '08'],   vent: '11' },
+  '08': { rooms: ['09', '07', '05'], vent: '15' },
+  '07': { rooms: ['08', '06'],   vent: '12' },
+  '06': { rooms: ['07', '05'],   vent: null },
+  '05': { rooms: ['08', '06', '04'], vent: '13' },
+  '04': { rooms: ['05', '03', '02'], vent: null },
+  '03': { rooms: ['04', '02'],   vent: null },
+  '02': { rooms: ['04', '03', '01', 'WINDOW'], vent: null },
+  '01': { rooms: ['02', 'DOOR'], vent: null },
+  'WINDOW': { rooms: ['01', 'DOOR'], vent: null },
+  'DOOR':   { rooms: ['OFFICE'],     vent: null }
+};
+
+// Where each Vent Camera (CAM 11-15) leads if NOT sealed!
+const VENT_DEST = {
+  '11': 'OFFICE',
+  '12': 'OFFICE',
+  '13': '02',
+  '14': 'OFFICE',
+  '15': '01'
+};
+
+// Authentic FNaF 3 Hourly AI Progression
+function getNightHourAI(night, hour) {
+  if (night === 7) return { ...customAI };
+  if (night === 1) {
+    // Night 1: Calm learning night — Springtrap wakes gently at 2 AM so player can practice Audio Lure & Vent Seal!
+    if (hour < 2) return { springtrap: 0, p_bb: 0, p_freddy: 0, p_chica: 0, p_foxy: 0, p_mangle: 0, p_puppet: 0 };
+    return { springtrap: 2, p_bb: 1, p_freddy: 0, p_chica: 0, p_foxy: 0, p_mangle: 0, p_puppet: 0 };
+  }
+  if (night === 2) {
+    return { springtrap: 5, p_bb: 4, p_freddy: 2, p_chica: 0, p_foxy: 1, p_mangle: 3, p_puppet: 0 };
+  }
+  if (night === 3) {
+    return { springtrap: 8, p_bb: 6, p_freddy: 5, p_chica: 5, p_foxy: 4, p_mangle: 5, p_puppet: 2 };
+  }
+  if (night === 4) {
+    return { springtrap: 11, p_bb: 9, p_freddy: 8, p_chica: 7, p_foxy: 7, p_mangle: 8, p_puppet: 7 };
+  }
+  if (night === 5) {
+    return { springtrap: 14, p_bb: 12, p_freddy: 11, p_chica: 11, p_foxy: 10, p_mangle: 11, p_puppet: 11 };
+  }
+  // Night 6 (Nightmare)
+  return { springtrap: 18, p_bb: 15, p_freddy: 15, p_chica: 15, p_foxy: 15, p_mangle: 15, p_puppet: 15 };
+}
+
+let audioCtx = null;
+function ensureAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+function playSound(type) {
+  ensureAudio();
+  const now = audioCtx.currentTime;
+  if (type === 'blip') {
+    const osc = audioCtx.createOscillator(), g = audioCtx.createGain();
+    osc.type = 'square'; osc.frequency.setValueAtTime(1150, now);
+    g.gain.setValueAtTime(0.07, now); g.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+    osc.connect(g); g.connect(audioCtx.destination); osc.start(now); osc.stop(now + 0.08);
+  } else if (type === 'bb_voice') {
+    // Balloon Boy "Hello! / Ha-ha!" audio lure sound
+    [[540, 0, 0.14], [720, 0.15, 0.22], [610, 0.40, 0.18]].forEach(([f, t, d]) => {
+      const osc = audioCtx.createOscillator(), g = audioCtx.createGain();
+      osc.type = 'triangle'; osc.frequency.setValueAtTime(f, now + t);
+      g.gain.setValueAtTime(0.22, now + t); g.gain.exponentialRampToValueAtTime(0.005, now + t + d);
+      osc.connect(g); g.connect(audioCtx.destination); osc.start(now + t); osc.stop(now + t + d);
+    });
+  } else if (type === 'vent_seal') {
+    [130, 85].forEach((f, i) => {
+      const osc = audioCtx.createOscillator(), g = audioCtx.createGain();
+      osc.type = 'sawtooth'; osc.frequency.setValueAtTime(f, now + i * 0.11);
+      g.gain.setValueAtTime(0.25, now + i * 0.11); g.gain.exponentialRampToValueAtTime(0.01, now + i * 0.11 + 0.12);
+      osc.connect(g); g.connect(audioCtx.destination); osc.start(now + i * 0.11); osc.stop(now + i * 0.11 + 0.12);
+    });
+  } else if (type === 'alarm') {
+    const osc = audioCtx.createOscillator(), g = audioCtx.createGain();
+    osc.type = 'sawtooth'; osc.frequency.setValueAtTime(420, now); osc.frequency.linearRampToValueAtTime(280, now + 0.35);
+    g.gain.setValueAtTime(0.11, now); g.gain.exponentialRampToValueAtTime(0.005, now + 0.38);
+    osc.connect(g); g.connect(audioCtx.destination); osc.start(now); osc.stop(now + 0.38);
+  } else if (type === 'mangle_garble') {
+    [190, 470, 830, 1340].forEach(f => {
+      const osc = audioCtx.createOscillator(), g = audioCtx.createGain();
+      osc.type = 'square'; osc.frequency.setValueAtTime(f, now);
+      osc.frequency.linearRampToValueAtTime(f * 0.75, now + 0.5);
+      g.gain.setValueAtTime(0.12, now); g.gain.exponentialRampToValueAtTime(0.005, now + 0.55);
+      osc.connect(g); g.connect(audioCtx.destination); osc.start(now); osc.stop(now + 0.55);
+    });
+  } else if (type === 'jumpscare') {
+    [180, 275, 395, 580, 840, 1180].forEach(freq => {
+      const osc = audioCtx.createOscillator(), g = audioCtx.createGain();
+      osc.type = 'sawtooth'; osc.frequency.setValueAtTime(freq, now);
+      osc.frequency.linearRampToValueAtTime(freq * 1.25, now + 0.45);
+      g.gain.setValueAtTime(0.18, now); g.gain.exponentialRampToValueAtTime(0.01, now + 1.35);
+      osc.connect(g); g.connect(audioCtx.destination); osc.start(now); osc.stop(now + 1.35);
+    });
+  } else if (type === 'chime6am') {
+    [[659.25, 0], [523.25, 0.55], [587.33, 1.1], [392.00, 1.65]].forEach(([freq, t]) => {
+      const osc = audioCtx.createOscillator(), g = audioCtx.createGain();
+      osc.type = 'sine'; osc.frequency.setValueAtTime(freq, now + t);
+      g.gain.setValueAtTime(0.22, now + t); g.gain.exponentialRampToValueAtTime(0.002, now + t + 0.9);
+      osc.connect(g); g.connect(audioCtx.destination); osc.start(now + t); osc.stop(now + t + 0.9);
+    });
+  }
+}
+
+let savedNight = parseInt(localStorage.getItem('fnaa3_saved_night') || '1', 10);
+let starsUnlocked = JSON.parse(localStorage.getItem('fnaa3_stars') || '{"s1":false,"s2":false,"s3":false}');
+let customAI = {
+  springtrap: 20, p_bb: 20, p_freddy: 20, p_chica: 20, p_foxy: 20, p_mangle: 20, p_puppet: 20
+};
+
+let G = {
+  running: false,
+  night: 1,
+  hour: 0,
+  nightSeconds: 0,
+  hourLengthSec: 60,
+  fastMode: false,
+  radarOn: false,
+
+  officePanX: -360,
+  mouseX: 640,
+
+  maintOpen: false,
+  monitorOpen: false,
+  ventMapMode: false,
+  currentCam: '01',
+  sealedVent: '11',
+
+  // Systems & Reboot State
+  errAudio: false,
+  errCam: false,
+  errVent: false,
+  rebooting: null, // null or 'audio' | 'camera' | 'vent' | 'all'
+  rebootTimer: 0,
+  rebootDuration: 4.0,
+
+  audioUsesLeft: 5,
+  audioCooldown: 0,
+  ventUsageTimer: 0,
+  alarmBlinkTick: 0,
+  alarmBlinkState: false,
+  ventBlackoutTimer: 0,
+
+  // Springtrap State
+  springPos: '09', // '10'..'01', '11'..'15', 'WINDOW', 'DOOR', 'OFFICE'
+  springTimer: 0,
+
+  // Phantom States
+  camPhantom: null,     // null or { who: 'p_bb'|'p_chica'|'p_mangle'|'p_puppet', cam: '01', stareTime: 0 }
+  windowPhantom: null,  // null or 'p_freddy' | 'p_mangle'
+  windowPhantomTimer: 0,
+  foxyReadyInOffice: false,
+  puppetInOfficeTimer: 0,
+
+  ai: { springtrap: 0, p_bb: 0, p_freddy: 0, p_chica: 0, p_foxy: 0, p_mangle: 0, p_puppet: 0 }
+};
+
+function updateTitleUI() {
+  document.getElementById('continue-night-label').textContent = `(Night ${Math.min(5, savedNight)})`;
+  let s = '';
+  if (starsUnlocked.s1) s += '★ ';
+  if (starsUnlocked.s2) s += '★ ';
+  if (starsUnlocked.s3) s += '★';
+  document.getElementById('title-stars').textContent = s;
+}
+updateTitleUI();
+
+// Title Screen Glitch
+setInterval(() => {
+  if (document.getElementById('title-screen').style.display === 'none') return;
+  const img = document.getElementById('title-bg-char');
+  const pool = ['springtrap', 'phantom_freddy', 'phantom_chica', 'phantom_foxy', 'phantom_bb', 'phantom_mangle', 'phantom_puppet'];
+  if (Math.random() < 0.24) {
+    const pick = pool[Math.floor(Math.random() * pool.length)];
+    img.src = `assets3/sprites/${pick}.png`;
+  } else {
+    img.src = 'assets3/sprites/springtrap.png';
+  }
+}, 200);
+
+// Static Canvas
+const staticCanvas = document.getElementById('static-canvas');
+const sCtx = staticCanvas.getContext('2d');
+setInterval(() => {
+  const w = 160, h = 90;
+  const imgData = sCtx.createImageData(w, h);
+  const d = imgData.data;
+  for (let i = 0; i < d.length; i += 4) {
+    const v = (Math.random() * 255) | 0;
+    d[i] = (v * 0.65) | 0; d[i+1] = v; d[i+2] = (v * 0.5) | 0; d[i+3] = 170;
+  }
+  sCtx.putImageData(imgData, 0, 0);
+  sCtx.drawImage(staticCanvas, 0, 0, w, h, 0, 0, staticCanvas.width, staticCanvas.height);
+}, 55);
+
+let newspaperTimeout = null;
+function startNewGame() {
+  ensureAudio(); playSound('blip');
+  savedNight = 1;
+  localStorage.setItem('fnaa3_saved_night', '1');
+  updateTitleUI();
+  document.getElementById('title-screen').style.display = 'none';
+  document.getElementById('newspaper-screen').style.display = 'flex';
+  newspaperTimeout = setTimeout(skipNewspaper, 4500);
+}
+function skipNewspaper() {
+  if (newspaperTimeout) { clearTimeout(newspaperTimeout); newspaperTimeout = null; }
+  document.getElementById('newspaper-screen').style.display = 'none';
+  startSelectedNight(1);
+}
+function continueGame() {
+  ensureAudio();
+  startSelectedNight(Math.min(5, savedNight));
+}
+function openCustomNight() {
+  ensureAudio(); playSound('blip');
+  document.getElementById('custom-night-modal').style.display = 'flex';
+}
+function closeCustomNight() {
+  playSound('blip');
+  document.getElementById('custom-night-modal').style.display = 'none';
+}
+function adjCustomAI(who, d) {
+  playSound('blip');
+  customAI[who] = Math.max(0, Math.min(20, customAI[who] + d));
+  document.getElementById('cn-' + who).textContent = customAI[who];
+}
+function setAllCustomAI(v) {
+  playSound('blip');
+  Object.keys(customAI).forEach(k => {
+    customAI[k] = v;
+    document.getElementById('cn-' + k).textContent = v;
+  });
+}
+function launchCustomNight() {
+  document.getElementById('custom-night-modal').style.display = 'none';
+  startSelectedNight(7);
+}
+
+function getMaxAudioUses(night) {
+  return Math.max(2, 7 - Math.min(5, night));
+}
+
+function startSelectedNight(n) {
+  ensureAudio(); playSound('blip');
+  document.getElementById('title-screen').style.display = 'none';
+  document.getElementById('gameover-screen').style.display = 'none';
+  document.getElementById('victory-screen').style.display = 'none';
+
+  G.night = n;
+  G.hour = 0;
+  G.nightSeconds = 0;
+  G.officePanX = -360;
+  G.maintOpen = false;
+  G.monitorOpen = false;
+  G.ventMapMode = false;
+  G.currentCam = '09';
+  G.sealedVent = '11';
+
+  G.errAudio = false;
+  G.errCam = false;
+  G.errVent = false;
+  G.rebooting = null;
+  G.rebootTimer = 0;
+  G.audioUsesLeft = getMaxAudioUses(n);
+  G.audioCooldown = 0;
+  G.ventUsageTimer = 0;
+  G.ventBlackoutTimer = 0;
+
+  G.springPos = '09';
+  G.springTimer = 0;
+  G.camPhantom = null;
+  G.windowPhantom = null;
+  G.windowPhantomTimer = 0;
+  G.foxyReadyInOffice = false;
+  G.puppetInOfficeTimer = 0;
+
+  G.ai = getNightHourAI(n, 0);
+
+  document.getElementById('maint-screen').style.display = 'none';
+  document.getElementById('cam-screen').style.display = 'none';
+  document.getElementById('vent-blackout').style.opacity = '0';
+  staticCanvas.style.opacity = '0.07';
+  updateVentSealButtons();
+
+  const names = ['Night 1', 'Night 2', 'Night 3', 'Night 4', 'Night 5', 'Nightmare (Night 6)', 'Custom Night'];
+  document.getElementById('night-intro-text').textContent = names[n - 1];
+  const intro = document.getElementById('night-intro-screen');
+  intro.style.display = 'flex';
+
+  setTimeout(() => {
+    intro.style.display = 'none';
+    document.getElementById('hud-layer').style.display = 'block';
+    G.running = true;
+    updateOfficeVisuals();
+    updateMaintUI();
+    updateHUD();
+  }, 2000);
+}
+
+// Mouse & Keyboard Input
+document.getElementById('game-wrap').addEventListener('mousemove', e => {
+  const rect = e.currentTarget.getBoundingClientRect();
+  G.mouseX = ((e.clientX - rect.left) / rect.width) * 1280;
+});
+
+window.addEventListener('keydown', e => {
+  if (!G.running) return;
+  const k = e.key.toLowerCase();
+  if (k === 'a') toggleMaintPanel();
+  else if (k === ' ' || k === 's') { e.preventDefault(); toggleMonitor(); }
+  else if (k === 'w' && G.monitorOpen) playAudioLure();
+  else if (k === 'e' && G.monitorOpen) sealCurrentVent();
+  else if (k === 'q' && G.monitorOpen) toggleVentMapMode();
+});
+
+function toggleMaintPanel() {
+  if (!G.running || G.puppetInOfficeTimer > 0) return;
+  if (G.monitorOpen) {
+    G.monitorOpen = false;
+    document.getElementById('cam-screen').style.display = 'none';
+  }
+  G.maintOpen = !G.maintOpen;
+  playSound('blip');
+  document.getElementById('maint-screen').style.display = G.maintOpen ? 'flex' : 'none';
+  if (!G.maintOpen) G.rebooting = null;
+  updateMaintUI();
+  updateOfficeVisuals();
+}
+
+function toggleMonitor() {
+  if (!G.running || G.puppetInOfficeTimer > 0) return;
+  if (G.maintOpen) {
+    G.maintOpen = false;
+    G.rebooting = null;
+    document.getElementById('maint-screen').style.display = 'none';
+  }
+  G.monitorOpen = !G.monitorOpen;
+  playSound('blip');
+  if (G.monitorOpen) {
+    // Opening the monitor clears Phantom Foxy from the Office Box!
+    G.foxyReadyInOffice = false;
+    document.getElementById('cam-screen').style.display = 'block';
+    staticCanvas.style.opacity = '0.24';
+    rollCameraPhantoms(G.currentCam);
+    updateCameraFeed();
+  } else {
+    G.camPhantom = null;
+    document.getElementById('cam-screen').style.display = 'none';
+    staticCanvas.style.opacity = '0.07';
+    // 18% chance Phantom Foxy spawns at the left Office Box when closing monitor (scaled by AI)
+    if (G.ai.p_foxy > 0 && Math.random() < (G.ai.p_foxy * 0.015)) {
+      G.foxyReadyInOffice = true;
+    }
+  }
+  updateOfficeVisuals();
+}
+
+function toggleVentMapMode() {
+  if (!G.running || !G.monitorOpen) return;
+  G.ventMapMode = !G.ventMapMode;
+  playSound('blip');
+  document.getElementById('building-cam-btns').style.display = G.ventMapMode ? 'none' : 'block';
+  document.getElementById('vent-cam-btns').style.display = G.ventMapMode ? 'block' : 'none';
+  document.getElementById('map-mode-title').textContent = G.ventMapMode
+    ? 'VENTILATION CAMERAS (CAM 11 - 15)'
+    : 'BUILDING CAMERAS (CAM 01 - 10)';
+  document.getElementById('toggle-map-btn').textContent = G.ventMapMode
+    ? '🔄 MAP TOGGLE: SWITCH TO BUILDING CAMS [Q]'
+    : '🔄 MAP TOGGLE: SWITCH TO VENT CAMS [Q]';
+  selectCamera(G.ventMapMode ? '11' : '01');
+}
+
+function selectCamera(camId) {
+  if (!G.running || !G.monitorOpen) return;
+  G.currentCam = camId;
+  playSound('blip');
+  document.querySelectorAll('.cam-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById('btn-' + camId);
+  if (btn) btn.classList.add('active');
+  document.getElementById('cam-room-title').textContent = CAM_NAMES[camId];
+  rollCameraPhantoms(camId);
+  updateCameraFeed();
+}
+
+function rollCameraPhantoms(camId) {
+  G.camPhantom = null;
+  if (G.errCam) return;
+  if (camId === '07' && G.ai.p_chica > 0 && Math.random() < (G.ai.p_chica * 0.025)) {
+    G.camPhantom = { who: 'p_chica', cam: '07', stareTime: 0 };
+  } else if (camId === '04' && G.ai.p_mangle > 0 && Math.random() < (G.ai.p_mangle * 0.028)) {
+    G.camPhantom = { who: 'p_mangle', cam: '04', stareTime: 0 };
+  } else if (camId === '08' && G.ai.p_puppet > 0 && Math.random() < (G.ai.p_puppet * 0.025)) {
+    G.camPhantom = { who: 'p_puppet', cam: '08', stareTime: 0 };
+  } else if (['01','02','03','05','09','10'].includes(camId) && G.springPos !== camId && G.ai.p_bb > 0 && Math.random() < (G.ai.p_bb * 0.022)) {
+    G.camPhantom = { who: 'p_bb', cam: camId, stareTime: 0 };
+  }
+}
+
+function playAudioLure() {
+  if (!G.running || !G.monitorOpen || G.ventMapMode || G.errAudio || G.audioCooldown > 0) return;
+  playSound('bb_voice');
+  G.audioCooldown = 4.5;
+  G.audioUsesLeft--;
+
+  // Authentic FNaF 3 Audio Lure: If Springtrap is in an adjacent room, 87.5% chance he walks to currentCam!
+  const targetRoom = G.currentCam;
+  const curPos = G.springPos;
+  const adj = (ROOM_GRAPH[curPos] && ROOM_GRAPH[curPos].rooms) ? ROOM_GRAPH[curPos].rooms : [];
+  const revAdj = (ROOM_GRAPH[targetRoom] && ROOM_GRAPH[targetRoom].rooms) ? ROOM_GRAPH[targetRoom].rooms : [];
+
+  if ((adj.includes(targetRoom) || revAdj.includes(curPos) || (curPos === 'WINDOW' && targetRoom === '02') || (curPos === 'DOOR' && targetRoom === '01')) && Math.random() < 0.875) {
+    G.springPos = targetRoom;
+    G.springTimer = 0;
+  }
+
+  if (G.audioUsesLeft <= 0) {
+    G.errAudio = true;
+    playSound('alarm');
+  }
+  updateCameraFeed();
+  updateHUD();
+}
+
+function sealCurrentVent() {
+  if (!G.running || !G.monitorOpen) return;
+  const targetVent = ['11','12','13','14','15'].includes(G.currentCam) ? G.currentCam : G.sealedVent;
+  G.sealedVent = targetVent;
+  playSound('vent_seal');
+  updateVentSealButtons();
+}
+
+function updateVentSealButtons() {
+  ['11','12','13','14','15'].forEach(v => {
+    const b = document.getElementById('btn-' + v);
+    if (b) b.classList.toggle('sealed', G.sealedVent === v);
+  });
+}
+
+function triggerReboot(which) {
+  if (!G.running || !G.maintOpen || G.rebooting) return;
+  playSound('blip');
+  G.rebooting = which;
+  G.rebootTimer = 0;
+  G.rebootDuration = (which === 'all') ? 7.5 : 3.8;
+  updateMaintUI();
+}
+
+function updateMaintUI() {
+  const setSt = (id, isErr, key) => {
+    const el = document.getElementById(id);
+    if (G.rebooting === key || G.rebooting === 'all') {
+      el.className = 'sys-status wait';
+      el.textContent = 'REBOOTING...';
+    } else if (isErr) {
+      el.className = 'sys-status err';
+      el.textContent = 'ERROR';
+    } else {
+      el.className = 'sys-status ok';
+      el.textContent = 'OK';
+    }
+  };
+  setSt('st-audio', G.errAudio, 'audio');
+  setSt('st-camera', G.errCam, 'camera');
+  setSt('st-vent', G.errVent, 'vent');
+  document.getElementById('st-all').textContent = (G.rebooting === 'all') ? 'WAIT...' : '';
+  document.getElementById('reboot-progress-txt').textContent = G.rebooting
+    ? `Rebooting ${G.rebooting.toUpperCase()}... (${Math.ceil(G.rebootDuration - G.rebootTimer)}s)`
+    : 'Click any offline system to reboot';
+}
+
+function updateOfficeVisuals() {
+  const bg = document.getElementById('office-bg');
+  const alertEl = document.getElementById('office-alert');
+
+  if (G.puppetInOfficeTimer > 0) {
+    bg.src = 'assets3/cams/office_inside_phantom_puppet.jpg';
+    alertEl.textContent = '👻 PHANTOM MONCHHICHI IN YOUR FACE — PANELS DISABLED!';
+    return;
+  }
+
+  if (G.springPos === 'DOOR') {
+    bg.src = 'assets3/cams/office_door_springtrap.jpg';
+    alertEl.textContent = '⚠️ SPRINGTRAP AT LEFT DOORWAY! LURE HIM BACK TO CAM 01 [W]!';
+  } else if (G.springPos === 'WINDOW') {
+    bg.src = 'assets3/cams/office_window_springtrap.jpg';
+    alertEl.textContent = '⚠️ SPRINGTRAP OUTSIDE FRONT WINDOW! PLAY AUDIO ON CAM 02 [W]!';
+  } else if (G.windowPhantom === 'p_mangle') {
+    bg.src = 'assets3/cams/office_window_phantom_mangle.jpg';
+    alertEl.textContent = '📻 PHANTOM MANGLE BROKE YOUR AUDIO DEVICES! REBOOT [A]!';
+  } else if (G.windowPhantom === 'p_freddy') {
+    bg.src = 'assets3/cams/office_window_phantom_freddy.jpg';
+    alertEl.textContent = '👻 PHANTOM ASHI WALKING IN WINDOW — OPEN MONITOR OR PANEL TO AVOID!';
+  } else if (G.foxyReadyInOffice) {
+    bg.src = 'assets3/cams/office_left_phantom_foxy.jpg';
+    alertEl.textContent = '👻 PHANTOM BIKINI BY THE LEFT BOX — OPEN MONITOR [SPACE] BEFORE PANNING LEFT!';
+  } else if (G.errVent && G.alarmBlinkState) {
+    bg.src = 'assets3/cams/office_alarm.jpg';
+    alertEl.textContent = '🚨 VENTILATION OFFLINE! REBOOT ON LEFT PANEL [A] BEFORE YOU BLACK OUT!';
+  } else {
+    bg.src = 'assets3/cams/office_normal.jpg';
+    alertEl.textContent = '';
+  }
+}
+
+function updateCameraFeed() {
+  if (!G.monitorOpen) return;
+  const img = document.getElementById('cam-feed-img');
+  const errBox = document.getElementById('cam-error-overlay');
+  const btnAudio = document.getElementById('btn-play-audio');
+  const lblAudio = document.getElementById('audio-uses-lbl');
+
+  errBox.style.display = G.errCam ? 'flex' : 'none';
+  btnAudio.disabled = G.ventMapMode || G.errAudio || G.audioCooldown > 0;
+  lblAudio.textContent = G.errAudio ? '(ERR)' : (G.audioCooldown > 0 ? `(${Math.ceil(G.audioCooldown)}s)` : `(${G.audioUsesLeft})`);
+
+  const c = G.currentCam;
+  if (G.camPhantom && G.camPhantom.cam === c) {
+    if (G.camPhantom.who === 'p_bb') img.src = `assets3/cams/cam${c}_phantom_bb.jpg`;
+    else if (G.camPhantom.who === 'p_chica') img.src = 'assets3/cams/cam07_phantom_chica.jpg';
+    else if (G.camPhantom.who === 'p_mangle') img.src = 'assets3/cams/cam04_phantom_mangle.jpg';
+    else if (G.camPhantom.who === 'p_puppet') img.src = 'assets3/cams/cam08_phantom_puppet.jpg';
+    return;
+  }
+
+  if (G.springPos === c) {
+    img.src = `assets3/cams/cam${c}_springtrap.jpg`;
+  } else {
+    img.src = `assets3/cams/cam${c}_empty.jpg`;
+  }
+}
+
+// ============================================================================
+// MAIN 60 FPS GAME LOOP
+// ============================================================================
+function rollAI(level) {
+  return level > 0 && (Math.floor(Math.random() * 20) + 1) <= level;
+}
+
+let lastTime = performance.now();
+function gameLoop(now) {
+  const dt = Math.min(0.1, (now - lastTime) / 1000);
+  lastTime = now;
+  if (G.running) updateGame(dt);
+  requestAnimationFrame(gameLoop);
+}
+requestAnimationFrame(gameLoop);
+
+function updateGame(dt) {
+  // 1. Office Horizontal Panning (2000px inside 1280px = 0 to -720px)
+  if (!G.monitorOpen && !G.maintOpen) {
+    if (G.mouseX < 340) {
+      G.officePanX = Math.min(0, G.officePanX + ((340 - G.mouseX) / 340) * 440 * dt);
+    } else if (G.mouseX > 940) {
+      G.officePanX = Math.max(-720, G.officePanX - ((G.mouseX - 940) / 340) * 440 * dt);
+    }
+    document.getElementById('office-world').style.transform = `translateX(${G.officePanX}px)`;
+
+    // If Phantom Foxy is waiting at the Left Office Box and player pans left (officePanX > -190):
+    if (G.foxyReadyInOffice && G.officePanX > -190) {
+      G.foxyReadyInOffice = false;
+      triggerPhantomJumpscare('phantom_foxy');
+    }
+  }
+
+  // 2. Clock Progression & Hourly AI Scaling
+  G.nightSeconds += dt;
+  const nh = Math.floor(G.nightSeconds / G.hourLengthSec);
+  if (nh > G.hour) {
+    G.hour = nh;
+    if (G.hour >= 6) { trigger6AMVictory(); return; }
+    G.ai = getNightHourAI(G.night, G.hour);
+    updateHUD();
+  }
+
+  // 3. Audio Cooldown & Natural Ventilation Degradation
+  if (G.audioCooldown > 0) {
+    G.audioCooldown = Math.max(0, G.audioCooldown - dt);
+    if (G.monitorOpen) updateCameraFeed();
+  }
+
+  G.ventUsageTimer += dt * (1 + G.night * 0.15);
+  if (G.ventUsageTimer >= 42.0 && !G.errVent) {
+    G.ventUsageTimer = 0;
+    G.errVent = true;
+    playSound('alarm');
+  }
+
+  // 4. Ventilation Alarm & Blackout Hallucinations
+  if (G.errVent) {
+    G.alarmBlinkTick += dt;
+    if (G.alarmBlinkTick >= 0.55) {
+      G.alarmBlinkTick = 0;
+      G.alarmBlinkState = !G.alarmBlinkState;
+      if (G.alarmBlinkState) playSound('alarm');
+      updateOfficeVisuals();
+    }
+    G.ventBlackoutTimer += dt;
+    const blk = document.getElementById('vent-blackout');
+    if (G.ventBlackoutTimer > 7.0) {
+      blk.style.opacity = String(0.35 + 0.55 * Math.abs(Math.sin(G.ventBlackoutTimer * 2.2)));
+    }
+  } else {
+    document.getElementById('vent-blackout').style.opacity = '0';
+  }
+
+  // 5. Maintenance Panel Reboot Timer
+  if (G.rebooting) {
+    G.rebootTimer += dt;
+    updateMaintUI();
+    if (G.rebootTimer >= G.rebootDuration) {
+      if (G.rebooting === 'audio' || G.rebooting === 'all') {
+        G.errAudio = false;
+        G.audioUsesLeft = getMaxAudioUses(G.night);
+      }
+      if (G.rebooting === 'camera' || G.rebooting === 'all') {
+        G.errCam = false;
+      }
+      if (G.rebooting === 'vent' || G.rebooting === 'all') {
+        G.errVent = false;
+        G.ventUsageTimer = 0;
+        G.ventBlackoutTimer = 0;
+      }
+      G.rebooting = null;
+      playSound('blip');
+      updateMaintUI();
+      updateOfficeVisuals();
+      updateHUD();
+    }
+  }
+
+  // 6. Camera Phantoms Stare Timer (Switch cam or close monitor within ~1.5s to avoid!)
+  if (G.monitorOpen && G.camPhantom && G.camPhantom.cam === G.currentCam && !G.errCam) {
+    G.camPhantom.stareTime += dt;
+    if (G.camPhantom.stareTime >= 1.55) {
+      const who = G.camPhantom.who;
+      G.camPhantom = null;
+      if (who === 'p_bb') {
+        triggerPhantomJumpscare('phantom_bb');
+      } else if (who === 'p_chica') {
+        triggerPhantomJumpscare('phantom_chica');
+      } else if (who === 'p_mangle') {
+        // Phantom Mangle drops in front of the Office window and breaks Audio!
+        G.windowPhantom = 'p_mangle';
+        G.windowPhantomTimer = 4.0;
+        G.errAudio = true;
+        playSound('mangle_garble');
+        updateOfficeVisuals();
+        updateHUD();
+      } else if (who === 'p_puppet') {
+        // Phantom Monchhichi locks you out of panels in the Office for 6 seconds!
+        G.monitorOpen = false;
+        document.getElementById('cam-screen').style.display = 'none';
+        G.puppetInOfficeTimer = 6.0;
+        playSound('mangle_garble');
+        updateOfficeVisuals();
+      }
+    }
+  }
+
+  // 7. Office Window Phantoms (Phantom Freddy & Phantom Mangle) & Phantom Puppet
+  if (G.puppetInOfficeTimer > 0) {
+    G.puppetInOfficeTimer = Math.max(0, G.puppetInOfficeTimer - dt);
+    if (G.puppetInOfficeTimer === 0) updateOfficeVisuals();
+  }
+
+  if (!G.windowPhantom && G.springPos !== 'WINDOW' && G.springPos !== 'DOOR' && G.ai.p_freddy > 0) {
+    if (Math.random() < (G.ai.p_freddy * 0.0012 * dt * 60)) {
+      G.windowPhantom = 'p_freddy';
+      G.windowPhantomTimer = 0;
+      updateOfficeVisuals();
+    }
+  }
+  if (G.windowPhantom === 'p_freddy') {
+    if (G.monitorOpen || G.maintOpen) {
+      // Looking at Monitor or Maintenance Panel causes Phantom Freddy to pass harmlessly!
+      G.windowPhantomTimer += dt * 1.6;
+      if (G.windowPhantomTimer >= 4.2) {
+        G.windowPhantom = null;
+        updateOfficeVisuals();
+      }
+    } else {
+      G.windowPhantomTimer += dt;
+      if (G.windowPhantomTimer >= 4.2) {
+        G.windowPhantom = null;
+        triggerPhantomJumpscare('phantom_freddy');
+      }
+    }
+  } else if (G.windowPhantom === 'p_mangle') {
+    G.windowPhantomTimer -= dt;
+    if (G.windowPhantomTimer <= 0) {
+      G.windowPhantom = null;
+      updateOfficeVisuals();
+    }
+  }
+
+  // 8. SPRINGTRAP ASHI MOVEMENT ALGORITHM (~4.8s intervals, faster if Ventilation is offline!)
+  const springInterval = G.errVent ? 3.4 : 4.8;
+  G.springTimer += dt;
+  if (G.springTimer >= springInterval) {
+    G.springTimer -= springInterval;
+    if (rollAI(G.ai.springtrap)) {
+      advanceSpringtrap();
+    }
+  }
+
+  updateHUD();
+  if (G.radarOn) updateRadarUI();
+}
+
+function advanceSpringtrap() {
+  const cur = G.springPos;
+
+  // If Springtrap is inside a Vent Camera (CAM 11 - 15):
+  if (['11','12','13','14','15'].includes(cur)) {
+    if (G.sealedVent === cur) {
+      // Vent is SEALED! Springtrap is blocked and pushed back to the origin room!
+      const backMap = { '11': '09', '12': '07', '13': '05', '14': '10', '15': '08' };
+      G.springPos = backMap[cur];
+      playSound('vent_seal');
+    } else {
+      const dest = VENT_DEST[cur];
+      if (dest === 'OFFICE') {
+        triggerSpringtrapJumpscare('Springtrap crawled through unsealed Vent CAM ' + cur + ' straight into the Office!');
+        return;
+      }
+      G.springPos = dest;
+    }
+    updateCameraFeed(); updateOfficeVisuals();
+    return;
+  }
+
+  // If Springtrap is at the Left Office Doorway ('DOOR'):
+  if (cur === 'DOOR') {
+    // If player is staring right at him in the Office without panel open, he waits briefly unless Ventilation is blacking out
+    if (!G.monitorOpen && !G.maintOpen && !G.errVent && Math.random() < 0.45) return;
+    triggerSpringtrapJumpscare('Springtrap lunged from the Left Office Doorway!');
+    return;
+  }
+
+  // If Springtrap is at the Front Office Window ('WINDOW'):
+  if (cur === 'WINDOW') {
+    G.springPos = 'DOOR';
+    updateCameraFeed(); updateOfficeVisuals();
+    return;
+  }
+
+  // Normal room movement (CAM 01 - 10):
+  const node = ROOM_GRAPH[cur];
+  if (!node) return;
+
+  // 35% chance to climb into the room's Vent if available!
+  if (node.vent && Math.random() < 0.35) {
+    G.springPos = node.vent;
+    playSound('vent_seal');
+  } else {
+    // Move forward toward the Office (prefer lower-numbered cameras / WINDOW / DOOR)
+    const opts = node.rooms;
+    G.springPos = opts[Math.floor(Math.random() * opts.length)];
+  }
+
+  // Random Camera Error when Springtrap moves on later nights
+  if (G.night >= 2 && !G.errCam && Math.random() < 0.14) {
+    G.errCam = true;
+  }
+
+  updateCameraFeed();
+  updateOfficeVisuals();
+}
+
+function triggerPhantomJumpscare(phantomSprite) {
+  if (!G.running) return;
+  G.monitorOpen = false;
+  G.maintOpen = false;
+  G.rebooting = null;
+  document.getElementById('cam-screen').style.display = 'none';
+  document.getElementById('maint-screen').style.display = 'none';
+
+  // Phantoms don't kill you — they jumpscare you and knock Ventilation offline!
+  G.errVent = true;
+  G.ventBlackoutTimer = 6.0;
+
+  const layer = document.getElementById('jumpscare-layer');
+  document.getElementById('jumpscare-char').src = `assets3/sprites/${phantomSprite}.png`;
+  layer.style.display = 'flex';
+  playSound('jumpscare');
+
+  setTimeout(() => {
+    layer.style.display = 'none';
+    updateOfficeVisuals();
+    updateHUD();
+  }, 850);
+}
+
+function triggerSpringtrapJumpscare(reason) {
+  G.running = false;
+  document.getElementById('hud-layer').style.display = 'none';
+  document.getElementById('cam-screen').style.display = 'none';
+  document.getElementById('maint-screen').style.display = 'none';
+
+  const layer = document.getElementById('jumpscare-layer');
+  document.getElementById('jumpscare-char').src = 'assets3/sprites/springtrap.png';
+  layer.style.display = 'flex';
+  playSound('jumpscare');
+
+  setTimeout(() => {
+    layer.style.display = 'none';
+    staticCanvas.style.opacity = '0.65';
+    document.getElementById('gameover-reason').textContent = reason || 'Springtrap got you!';
+    document.getElementById('gameover-screen').style.display = 'flex';
+  }, 1450);
+}
+
+function updateHUD() {
+  document.getElementById('hud-time').textContent = `${G.hour === 0 ? 12 : G.hour} AM`;
+  document.getElementById('hud-night').textContent = `Night ${G.night}`;
+
+  document.getElementById('hud-err-audio').style.display = G.errAudio ? 'block' : 'none';
+  document.getElementById('hud-err-cam').style.display   = G.errCam   ? 'block' : 'none';
+  document.getElementById('hud-err-vent').style.display  = G.errVent  ? 'block' : 'none';
+  document.getElementById('hud-all-ok').style.display    = (!G.errAudio && !G.errCam && !G.errVent) ? 'block' : 'none';
+}
+
+function toggleSpeedMode() {
+  G.fastMode = !G.fastMode;
+  G.hourLengthSec = G.fastMode ? 22 : 60;
+  const btn = document.getElementById('btn-speed');
+  btn.textContent = G.fastMode ? 'Speed: 3x (22s/hr)' : 'Speed: 1x (60s/hr)';
+  btn.classList.toggle('active', G.fastMode);
+}
+
+function toggleRadar() {
+  G.radarOn = !G.radarOn;
+  const btn = document.getElementById('btn-radar');
+  btn.textContent = G.radarOn ? 'AI Radar: ON' : 'AI Radar: OFF';
+  btn.classList.toggle('active', G.radarOn);
+  document.getElementById('ai-debug-box').style.display = G.radarOn ? 'block' : 'none';
+  updateRadarUI();
+}
+
+function updateRadarUI() {
+  ['01','02','03','04','05','06','07','08','09','10','11','12','13','14','15'].forEach(id => {
+    const el = document.getElementById('rad-' + id);
+    if (el) el.innerHTML = '';
+  });
+  const spEl = document.getElementById('rad-' + G.springPos);
+  if (spEl) spEl.innerHTML += `<span class="r-dot" style="background:#aadd33">ST</span>`;
+
+  document.getElementById('ai-debug-box').innerHTML =
+    `<b>FNaA 3 Live State:</b><br>` +
+    `Springtrap Pos: <b>${G.springPos}</b> | Sealed Vent: <b>CAM ${G.sealedVent}</b> | Audio Uses: ${G.audioUsesLeft}<br>` +
+    `Window Phantom: ${G.windowPhantom || 'None'} | Foxy Box: ${G.foxyReadyInOffice ? 'YES' : 'No'} | Cam Phantom: ${G.camPhantom ? G.camPhantom.who : 'None'}`;
+}
+
+function trigger6AMVictory() {
+  G.running = false;
+  document.getElementById('hud-layer').style.display = 'none';
+  document.getElementById('cam-screen').style.display = 'none';
+  document.getElementById('maint-screen').style.display = 'none';
+  playSound('chime6am');
+
+  if (G.night < 5 && savedNight <= G.night) {
+    savedNight = G.night + 1;
+    localStorage.setItem('fnaa3_saved_night', String(savedNight));
+  }
+  if (G.night === 5) starsUnlocked.s1 = true;
+  if (G.night === 6) starsUnlocked.s2 = true;
+  if (G.night === 7) starsUnlocked.s3 = true;
+  localStorage.setItem('fnaa3_stars', JSON.stringify(starsUnlocked));
+  updateTitleUI();
+
+  const vic = document.getElementById('victory-screen');
+  const clk = document.getElementById('victory-clock');
+  const sub = document.getElementById('victory-sub');
+  clk.textContent = '5:00 AM';
+  sub.style.opacity = '0';
+  sub.textContent = (G.night >= 5) ? 'YOU SURVIVED FAZBEAR\'S FRIGHT — FIVE NIGHTS AT ASHI 3!' : `Advancing to Night ${G.night + 1}...`;
+  vic.style.display = 'flex';
+
+  setTimeout(() => { clk.textContent = '6:00 AM'; sub.style.opacity = '1'; }, 1200);
+  setTimeout(() => {
+    vic.style.display = 'none';
+    if (G.night < 5) startSelectedNight(G.night + 1);
+    else returnToMenu();
+  }, 5000);
+}
+
+function returnToMenu() {
+  G.running = false;
+  document.getElementById('gameover-screen').style.display = 'none';
+  document.getElementById('victory-screen').style.display = 'none';
+  document.getElementById('hud-layer').style.display = 'none';
+  document.getElementById('cam-screen').style.display = 'none';
+  document.getElementById('maint-screen').style.display = 'none';
+  document.getElementById('title-screen').style.display = 'flex';
+  staticCanvas.style.opacity = '0.18';
+}
+</script>
+</body>
+</html>
+
