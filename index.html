@@ -545,6 +545,9 @@
       <div class="menu-btn" onclick="openCustomNight()">
         <span class="arrow">&gt;&gt;</span> Custom Night
       </div>
+      <div class="menu-btn" style="color:#ffdd55;" onclick="openFnaf3SecretHub()">
+        <span class="arrow">&gt;&gt;</span> &#x1F579; Secret Minigames &amp; Good Ending Quest
+      </div>
 
       <div style="margin-top:6px;font-size:12px;color:#8ab070;">QUICK SELECT NIGHT (AUDIO LURE + VENT SEAL + SYSTEM REBOOT + 6 PHANTOMS):</div>
       <div class="night-select-row">
@@ -558,8 +561,10 @@
       </div>
 
       <div class="switch-links">
-        <a href="https://github.com/AkashiZai/fivenightatashi" target="_blank" class="switch-game-btn">&#x25C0; Play Five Nights at Ashi 1</a>
-        <a href="https://github.com/AkashiZai/fivenightatashi2" target="_blank" class="switch-game-btn">&#x25C0; Play Five Nights at Ashi 2</a>
+        <a href="index.html" class="switch-game-btn">&#x25C0; Part 1</a>
+        <a href="fnaf2.html" class="switch-game-btn">&#x25C0; Part 2</a>
+        <a href="fnaf4.html" class="switch-game-btn" style="border-color:#ff3333;color:#ff8888;">&#x25B6; Part 4</a>
+        <a href="fnafsl.html" class="switch-game-btn" style="border-color:#ff2e55;color:#ff88aa;">&#x25B6; Sister Location</a>
       </div>
     </div>
 
@@ -820,8 +825,9 @@
     <div id="dev-toolbar">
       <button class="tool-pill" id="btn-speed" onclick="toggleSpeedMode()">Speed: 1x (60s/hr)</button>
       <button class="tool-pill" id="btn-radar" onclick="toggleRadar()">AI Radar: OFF</button>
-      <a href="https://github.com/AkashiZai/fivenightatashi" target="_blank" class="tool-pill" style="text-decoration:none;">FNaA 1</a>
-      <a href="https://github.com/AkashiZai/fivenightatashi2" target="_blank" class="tool-pill" style="text-decoration:none;">FNaA 2</a>
+      <button class="tool-pill" style="border-color:#ffdd44;color:#ffdd44;" onclick="openFnaf3SecretHub()">&#x1F579; Good Ending / Secrets</button>
+      <a href="index.html" class="tool-pill" style="text-decoration:none;">FNaA 1</a>
+      <a href="fnaf2.html" class="tool-pill" style="text-decoration:none;">FNaA 2</a>
     </div>
     <div id="ai-debug-box"></div>
 
@@ -842,6 +848,81 @@
   <div id="jumpscare-layer">
     <img id="jumpscare-bg" src="assets3/cams/office_normal.jpg" alt="BG">
     <img id="jumpscare-char" src="assets3/sprites/springtrap.png" alt="Jumpscare">
+  </div>
+
+  <!-- FNAF 3 SECRET MINIGAMES & GOOD ENDING QUEST MODAL -->
+  <div id="fnaf3-secret-modal" style="position:absolute;inset:0;z-index:88;background:rgba(4,8,2,0.96);display:none;flex-direction:column;align-items:center;justify-content:center;padding:18px;font-family:'Share Tech Mono',monospace;">
+    <h2 style="color:#ffdd55;font-size:28px;letter-spacing:2px;margin-bottom:4px;">&#x1F579; FNaF 3 SECRET MINIGAMES &amp; GOOD ENDING QUEST</h2>
+    <div id="quest-status-banner" style="color:#9ce644;font-size:15px;margin-bottom:10px;text-align:center;"></div>
+
+    <!-- 6 SECRET MINIGAME CARDS + EASTER EGG TRIGGERS -->
+    <div id="secret-cards-wrap" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:1050px;width:95%;">
+      <div style="background:#0c1408;border:2px solid #5a8038;padding:10px;border-radius:4px;">
+        <div style="color:#ffdd55;font-weight:bold;font-size:16px;">1. BB's Air Adventure</div>
+        <div style="color:#aaa;font-size:12px;margin:4px 0;">Trigger: Double-click BB Drawing on <b>CAM 08</b>. Glitch through left wall to unlock Cake Platform!</div>
+        <div id="st-mg-bb" style="font-size:13px;color:#ff8866;margin-bottom:6px;">Status: Locked</div>
+        <button class="tool-pill" style="width:100%;background:#1e3310;color:#fff;" onclick="launchFnaf3Minigame('bb')">&#x25B6; Play BB's Air Adventure</button>
+      </div>
+
+      <div style="background:#0c1408;border:2px solid #5a8038;padding:10px;border-radius:4px;">
+        <div style="color:#ffdd55;font-weight:bold;font-size:16px;">2. Mangle's Quest</div>
+        <div style="color:#aaa;font-size:12px;margin:4px 0;">Trigger: <b>CAM 07</b> Arcade Buttons (UL, BL, UR, BR). Collect Giant Cake to enable all Soul Cakes!</div>
+        <div id="st-mg-mangle" style="font-size:13px;color:#ff8866;margin-bottom:6px;">Status: Cake Not Found</div>
+        <button class="tool-pill" style="width:100%;background:#1e3310;color:#fff;" onclick="launchFnaf3Minigame('mangle')">&#x25B6; Play Mangle's Quest</button>
+      </div>
+
+      <div style="background:#0c1408;border:2px solid #5a8038;padding:10px;border-radius:4px;">
+        <div style="color:#ffdd55;font-weight:bold;font-size:16px;">3. Chica's Party</div>
+        <div style="color:#aaa;font-size:12px;margin:4px 0;">Trigger: Click 4 Shadow Cupcakes on <b>CAM 02, 03, 04, 06</b>. Deliver Cake to Crying Soul #2!</div>
+        <div id="st-mg-chica" style="font-size:13px;color:#ff8866;margin-bottom:6px;">Status: Soul Trapped</div>
+        <button class="tool-pill" style="width:100%;background:#1e3310;color:#fff;" onclick="launchFnaf3Minigame('chica')">&#x25B6; Play Chica's Party</button>
+      </div>
+
+      <div style="background:#0c1408;border:2px solid #5a8038;padding:10px;border-radius:4px;">
+        <div style="color:#ffdd55;font-weight:bold;font-size:16px;">4. Stage 01 (Code: 395248)</div>
+        <div style="color:#aaa;font-size:12px;margin:4px 0;">Trigger: Click Office Wall Tiles <b>3-9-5-2-4-8</b>. Play as Fredbear Ashi &amp; give Cake to Soul #3!</div>
+        <div id="st-mg-stage01" style="font-size:13px;color:#ff8866;margin-bottom:6px;">Status: Soul Trapped</div>
+        <button class="tool-pill" style="width:100%;background:#1e3310;color:#fff;" onclick="launchFnaf3Minigame('stage01')">&#x25B6; Enter 395248 / Play Stage 01</button>
+      </div>
+
+      <div style="background:#0c1408;border:2px solid #5a8038;padding:10px;border-radius:4px;">
+        <div style="color:#ffdd55;font-weight:bold;font-size:16px;">5. Glitch Shadow Bonnie</div>
+        <div style="color:#aaa;font-size:12px;margin:4px 0;">Trigger: Click Shadow Bonnie Figurine on Office Desk (Night 5). Warp stages [SPACE] to save Soul #4!</div>
+        <div id="st-mg-glitch" style="font-size:13px;color:#ff8866;margin-bottom:6px;">Status: Soul Trapped</div>
+        <button class="tool-pill" style="width:100%;background:#1e3310;color:#fff;" onclick="launchFnaf3Minigame('glitch')">&#x25B6; Play RWQFSFASXC Minigame</button>
+      </div>
+
+      <div style="background:#16240a;border:2px solid #ffdd55;padding:10px;border-radius:4px;">
+        <div style="color:#ffdd55;font-weight:bold;font-size:16px;">6. HAPPIEST DAY (FINALE)</div>
+        <div style="color:#aaa;font-size:12px;margin:4px 0;">Trigger: Click Puppet Poster on <b>CAM 03</b>. Deliver the Final Cake to Golden Freddy Ashi!</div>
+        <div id="st-mg-happiest" style="font-size:13px;color:#ff8866;margin-bottom:6px;">Status: Soul Trapped</div>
+        <button class="tool-pill" style="width:100%;background:#4a6b18;color:#fff;font-weight:bold;" onclick="launchFnaf3Minigame('happiest')">&#x1F382; Play Happiest Day</button>
+      </div>
+    </div>
+
+    <!-- OTHER FNAF 3 EASTER EGGS ROW -->
+    <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:12px;">
+      <button class="tool-pill" onclick="launchFnaf3Minigame('followme')">&#x1F480; Night 5 Springlock Origin ("Follow Me")</button>
+      <button class="tool-pill" onclick="triggerFnaf3EasterEgg('honk')">&#x1F4EF; Office Nose Honk</button>
+      <button class="tool-pill" onclick="triggerFnaf3EasterEgg('shadow_freddy')">&#x1F47B; Crumpled Shadow Freddy Suit</button>
+      <button class="tool-pill" onclick="triggerFnaf3EasterEgg('rare_screen')">&#x1F9DF; Rare Springtrap Corpse Screen</button>
+      <button class="tool-pill" style="border-color:#55ff55;color:#55ff55;" onclick="showFnaf3EndingShowcase(true)">&#x1F31F; View GOOD ENDING</button>
+      <button class="tool-pill" style="border-color:#ff5555;color:#ff5555;" onclick="showFnaf3EndingShowcase(false)">&#x1F525; View BAD ENDING</button>
+      <button class="tool-pill" style="background:#882222;color:#fff;" onclick="closeFnaf3SecretHub()">&#x2716; Close</button>
+    </div>
+
+    <!-- 8-BIT MINIGAME CANVAS CONTAINER -->
+    <div id="fnaf3-mg-play-area" style="display:none;flex-direction:column;align-items:center;margin-top:8px;">
+      <div id="fnaf3-mg-title" style="color:#ffdd55;font-size:20px;margin-bottom:4px;"></div>
+      <canvas id="fnaf3-mg-canvas" width="760" height="390" style="background:#000;border:3px solid #9ce644;image-rendering:pixelated;"></canvas>
+      <div style="display:flex;gap:10px;margin-top:8px;">
+        <button class="tool-pill" onclick="mgMove(-1,0)">&#x25C0; LEFT [A]</button>
+        <button class="tool-pill" onclick="mgMove(0,-1)">&#x25B2; JUMP / GLITCH [W]</button>
+        <button class="tool-pill" onclick="mgMove(1,0)">RIGHT [D] &#x25B6;</button>
+        <button class="tool-pill" style="border-color:#ffdd55;color:#ffdd55;" onclick="mgSpecialAction()">&#x2728; DELIVER CAKE / WARP [SPACE]</button>
+        <button class="tool-pill" onclick="stopFnaf3Minigame()">&#x21A9; Back to Quest List</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1750,14 +1831,20 @@ function trigger6AMVictory() {
   const sub = document.getElementById('victory-sub');
   clk.textContent = '5:00 AM';
   sub.style.opacity = '0';
-  sub.textContent = (G.night >= 5) ? 'YOU SURVIVED FAZBEAR\'S FRIGHT — FIVE NIGHTS AT ASHI 3!' : `Advancing to Night ${G.night + 1}...`;
+  const isGoodEnd = isGoodEndingUnlocked();
+  if (G.night === 5 && isGoodEnd) starsUnlocked.s4 = true;
+  localStorage.setItem('fnaa3_stars', JSON.stringify(starsUnlocked));
+  updateTitleUI();
+  sub.textContent = (G.night >= 5)
+    ? (isGoodEnd ? '🌟 GOOD ENDING UNLOCKED! ALL 5 SOULS FREED IN HAPPIEST DAY!' : '🔥 BAD ENDING (Play the 6 Secret Minigames to unlock the Good Ending!)')
+    : `Advancing to Night ${G.night + 1}...`;
   vic.style.display = 'flex';
 
   setTimeout(() => { clk.textContent = '6:00 AM'; sub.style.opacity = '1'; }, 1200);
   setTimeout(() => {
     vic.style.display = 'none';
     if (G.night < 5) startSelectedNight(G.night + 1);
-    else returnToMenu();
+    else showFnaf3EndingShowcase(isGoodEnd);
   }, 5000);
 }
 
@@ -1771,6 +1858,226 @@ function returnToMenu() {
   document.getElementById('title-screen').style.display = 'flex';
   staticCanvas.style.opacity = '0.18';
 }
+
+// ============================================================================
+// FNAF 3 SECRET MINIGAMES (GOOD ENDING QUEST) & EASTER EGGS ENGINE
+// ============================================================================
+let fnaf3Quest = JSON.parse(localStorage.getItem('fnaa3_quest') || '{"bb":false,"mangle":false,"chica":false,"stage01":false,"glitch":false,"happiest":false}');
+let activeMg = null;
+let mgPlayer = { x: 100, y: 270, stage: 1, items: 0, hasGlitched: false };
+
+function saveFnaf3Quest() {
+  localStorage.setItem('fnaa3_quest', JSON.stringify(fnaf3Quest));
+  updateQuestModalUI();
+}
+
+function isGoodEndingUnlocked() {
+  return !!(fnaf3Quest.bb && fnaf3Quest.mangle && fnaf3Quest.chica && fnaf3Quest.stage01 && fnaf3Quest.glitch && fnaf3Quest.happiest);
+}
+
+function openFnaf3SecretHub() {
+  document.getElementById('fnaf3-secret-modal').style.display = 'flex';
+  document.getElementById('secret-cards-wrap').style.display = 'grid';
+  document.getElementById('fnaf3-mg-play-area').style.display = 'none';
+  updateQuestModalUI();
+}
+
+function closeFnaf3SecretHub() {
+  activeMg = null;
+  document.getElementById('fnaf3-secret-modal').style.display = 'none';
+}
+
+function updateQuestModalUI() {
+  const map = [
+    ['bb', 'st-mg-bb', '✓ Soul #1 Saved (BB + Cake)!', 'Status: Not Completed'],
+    ['mangle', 'st-mg-mangle', '✓ Giant Cake Collected!', 'Status: Cake Not Found'],
+    ['chica', 'st-mg-chica', '✓ Soul #2 Saved (Chica Party)!', 'Status: Soul Trapped'],
+    ['stage01', 'st-mg-stage01', '✓ Soul #3 Saved (Code 395248)!', 'Status: Soul Trapped'],
+    ['glitch', 'st-mg-glitch', '✓ Soul #4 Saved (Shadow Bonnie)!', 'Status: Soul Trapped'],
+    ['happiest', 'st-mg-happiest', '🌟 HAPPIEST DAY COMPLETE (ALL 5 SOULS FREED)!', 'Status: Final Soul Waiting']
+  ];
+  let count = 0;
+  map.forEach(([k, id, okTxt, noTxt]) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (fnaf3Quest[k]) { count++; el.textContent = okTxt; el.style.color = '#66ff66'; }
+    else { el.textContent = noTxt; el.style.color = '#ff8866'; }
+  });
+  const banner = document.getElementById('quest-status-banner');
+  if (banner) {
+    banner.innerHTML = isGoodEndingUnlocked()
+      ? `🌟 <b>GOOD ENDING UNLOCKED (${count}/6 MINIGAMES COMPLETED)!</b> All 5 crying souls have received their Birthday Cake!`
+      : `Progress: <b>${count} / 6 Secret Minigames Completed</b> — Complete all 6 to unlock the canonical FNaF 3 <b>GOOD ENDING</b>!`;
+  }
+}
+
+function launchFnaf3Minigame(mgId) {
+  playSound('cam_click');
+  activeMg = mgId;
+  mgPlayer = { x: 110, y: 260, stage: 1, items: 0, hasGlitched: false };
+  document.getElementById('fnaf3-secret-modal').style.display = 'flex';
+  document.getElementById('secret-cards-wrap').style.display = 'none';
+  document.getElementById('fnaf3-mg-play-area').style.display = 'flex';
+
+  const titles = {
+    bb: "BB'S AIR ADVENTURE (CAM 08) — Collect Balloons, Glitch Left Wall [A], & Deliver Cake [SPACE]!",
+    mangle: "MANGLE'S QUEST (CAM 07: UL-BL-UR-BR) — Collect Parts, Glitch Sky Wall, & Grab Giant Cake!",
+    chica: "CHICA'S PARTY (4 Shadow Cupcakes) — Feed Kids, Jump Glitch Wall, & Give Cake to Soul #2!",
+    stage01: "STAGE 01 (Office Wall Code: 3-9-5-2-4-8) — Glitch Out of Stage as Fredbear Ashi & Save Soul #3!",
+    glitch: "RWQFSFASXC (Shadow Bonnie Desk Figurine) — Warp Stages [SPACE] & Deliver Cake to Soul #4!",
+    happiest: "HAPPIEST DAY (CAM 03 Puppet) — Walk Right to Golden Freddy Ashi & Present the Final Cake [SPACE]!",
+    followme: "NIGHT 5 END MINIGAME: FOLLOW ME — Corner Purple Guy into the Springbonnie Ashi Suit!"
+  };
+  document.getElementById('fnaf3-mg-title').textContent = titles[mgId] || mgId;
+  renderFnaf3Minigame();
+}
+
+function stopFnaf3Minigame() {
+  activeMg = null;
+  document.getElementById('secret-cards-wrap').style.display = 'grid';
+  document.getElementById('fnaf3-mg-play-area').style.display = 'none';
+  updateQuestModalUI();
+}
+
+function mgMove(dx, dy) {
+  if (!activeMg) return;
+  playSound('cam_click');
+  mgPlayer.x = Math.max(20, Math.min(700, mgPlayer.x + dx * 55));
+  if (dy < 0) {
+    mgPlayer.y = Math.max(60, mgPlayer.y - 65);
+    setTimeout(() => { mgPlayer.y = 260; renderFnaf3Minigame(); }, 260);
+  }
+  if (mgPlayer.x <= 40 && !mgPlayer.hasGlitched) {
+    mgPlayer.hasGlitched = true;
+  }
+  mgPlayer.items++;
+  renderFnaf3Minigame();
+}
+
+function mgSpecialAction() {
+  if (!activeMg) return;
+  playSound('chime6am');
+  if (activeMg === 'followme') {
+    alert('💀 SPRINGLOCK FAILURE! Purple Guy jumps into the Springbonnie Ashi suit to hide from the 5 ghost spirits — and the springlocks snap shut, creating SPRINGTRAP ASHI!');
+    stopFnaf3Minigame();
+    return;
+  }
+  fnaf3Quest[activeMg] = true;
+  if (activeMg === 'happiest') {
+    fnaf3Quest.bb = fnaf3Quest.mangle = fnaf3Quest.chica = fnaf3Quest.stage01 = fnaf3Quest.glitch = true;
+    starsUnlocked.s4 = true;
+    localStorage.setItem('fnaa3_stars', JSON.stringify(starsUnlocked));
+    updateTitleUI();
+  }
+  saveFnaf3Quest();
+  renderFnaf3Minigame(true);
+  setTimeout(() => {
+    if (activeMg === 'happiest') showFnaf3EndingShowcase(true);
+    else stopFnaf3Minigame();
+  }, 1100);
+}
+
+function renderFnaf3Minigame(completed = false) {
+  const cvs = document.getElementById('fnaf3-mg-canvas');
+  if (!cvs) return;
+  const ctx = cvs.getContext('2d');
+  ctx.fillStyle = '#070a05';
+  ctx.fillRect(0, 0, 760, 390);
+
+  // Retro scanlines
+  ctx.fillStyle = 'rgba(156,230,68,0.06)';
+  for (let y = 0; y < 390; y += 6) ctx.fillRect(0, y, 760, 2);
+
+  // Floor & Glitch Border
+  ctx.fillStyle = mgPlayer.hasGlitched ? '#5522aa' : '#2d441c';
+  ctx.fillRect(0, 320, 760, 70);
+  ctx.strokeStyle = '#9ce644';
+  ctx.lineWidth = 4;
+  ctx.strokeRect(16, 16, 728, 358);
+
+  // Player 8-Bit Sprite (Colored by Minigame)
+  const colors = {
+    bb: '#dd3333', mangle: '#ff77cc', chica: '#ffdd22',
+    stage01: '#e6b800', glitch: '#9933ff', happiest: '#ffffff', followme: '#aaeeff'
+  };
+  ctx.fillStyle = colors[activeMg] || '#9ce644';
+  ctx.fillRect(mgPlayer.x, mgPlayer.y, 44, 60);
+  ctx.fillStyle = '#000';
+  ctx.fillRect(mgPlayer.x + 8, mgPlayer.y + 12, 8, 8);
+  ctx.fillRect(mgPlayer.x + 26, mgPlayer.y + 12, 8, 8);
+
+  // Target Crying Child Soul / Giant Cake on the Right Side
+  ctx.fillStyle = completed ? '#66ff66' : '#8899aa';
+  ctx.fillRect(610, 265, 42, 55);
+  // Tears
+  if (!completed) {
+    ctx.fillStyle = '#3399ff';
+    ctx.fillRect(618, 280, 6, 22);
+    ctx.fillRect(634, 280, 6, 22);
+  }
+
+  // Birthday Cake next to soul when delivered or ready
+  ctx.fillStyle = '#fff0dd';
+  ctx.fillRect(545, 285, 46, 35);
+  ctx.fillStyle = '#ff3355';
+  ctx.fillRect(545, 285, 46, 10);
+  ctx.fillStyle = '#ffdd33';
+  ctx.fillRect(565, 270, 6, 15);
+
+  if (activeMg === 'happiest') {
+    // Draw the 4 other masked spirit children (Freddy, Bonnie, Chica, Foxy)
+    ['#a85820', '#4455cc', '#e5c100', '#cc3322'].forEach((mc, idx) => {
+      ctx.fillStyle = completed ? '#222' : mc;
+      const sy = completed ? 302 : 265;
+      ctx.fillRect(320 + idx * 52, sy, 36, completed ? 18 : 55);
+    });
+  }
+
+  ctx.fillStyle = '#e2ffc8';
+  ctx.font = '18px monospace';
+  ctx.fillText(completed ? '★ SOUL FREED WITH BIRTHDAY CAKE! ★' : 'Move [A/D] or Glitch [W], then press [SPACE / DELIVER CAKE]!', 36, 48);
+}
+
+function triggerFnaf3EasterEgg(type) {
+  closeFnaf3SecretHub();
+  if (type === 'honk') {
+    playSound('audio_lure');
+    const al = document.getElementById('office-alert');
+    if (al) al.textContent = '📯 HONK! You booped the Freddy Poster nose in the Office!';
+  } else if (type === 'shadow_freddy') {
+    playSound('vent_thud');
+    const al = document.getElementById('office-alert');
+    if (al) al.textContent = '👻 EASTER EGG: Crumpled Purple Shadow Freddy Suit appeared in the left corner of your Office!';
+  } else if (type === 'rare_screen') {
+    playSound('jumpscare');
+    const layer = document.getElementById('jumpscare-layer');
+    document.getElementById('jumpscare-char').src = 'assets3/sprites/springtrap.png';
+    layer.style.display = 'flex';
+    setTimeout(() => { layer.style.display = 'none'; }, 1100);
+  }
+}
+
+function showFnaf3EndingShowcase(good) {
+  closeFnaf3SecretHub();
+  const vic = document.getElementById('victory-screen');
+  const clk = document.getElementById('victory-clock');
+  const sub = document.getElementById('victory-sub');
+  clk.textContent = good ? 'THE END (GOOD ENDING)' : 'BAD ENDING';
+  clk.style.color = good ? '#9ce644' : '#ff4433';
+  sub.style.opacity = '1';
+  sub.innerHTML = good
+    ? '🌟 <b>ALL 5 SOULS ARE AT PEACE!</b><br>The 4 animatronic masks (Freddy, Bonnie, Chica, Foxy) rest empty with their lights extinguished, and the 5th mask has vanished.'
+    : '🔥 <b>THE SOULS REMAIN TRAPPED...</b><br>All 5 animatronic heads still burn with eerie glowing eyes inside Fazbear\'s Fright. Complete the 6 Secret Minigames to free them!';
+  vic.style.display = 'flex';
+  setTimeout(() => { vic.style.display = 'none'; returnToMenu(); }, 4800);
+}
+
+// Double-clicking cameras in FNaF 3 also triggers the canonical Secret Minigames!
+document.getElementById('cam-feed-img').addEventListener('dblclick', () => {
+  if (G.curCam === '08') launchFnaf3Minigame('bb');
+  else if (G.curCam === '07') launchFnaf3Minigame('mangle');
+  else if (['02','03','04','06'].includes(G.curCam)) launchFnaf3Minigame(G.curCam === '03' && fnaf3Quest.chica ? 'happiest' : 'chica');
+});
 </script>
 </body>
 </html>
